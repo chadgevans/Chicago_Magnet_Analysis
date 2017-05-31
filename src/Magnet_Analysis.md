@@ -12,59 +12,16 @@ Chad Evans
 -   [Analysis](#analysis)
 
 Set Up
-------
+======
 
-First, set up the environment, read in the libraries, indicate the directories, read in and clean the data.
-
-Read in the Directories
+First, set up the environment: read in the libraries, indicate the directories, read in and clean the data.
 
 ``` r
 USA.shp <- readOGR(dsn = datdir2, layer = "cb_2014_us_nation_5m")
-```
-
-    ## OGR data source with driver: ESRI Shapefile 
-    ## Source: "/Users/chadgevans/Research/Projects/Data/Shapefiles/United_States_Shapefile", layer: "cb_2014_us_nation_5m"
-    ## with 1 features
-    ## It has 3 fields
-
-    ## Warning in readOGR(dsn = datdir2, layer = "cb_2014_us_nation_5m"): Z-
-    ## dimension discarded
-
-``` r
 Il.shp <- readOGR(dsn = datdir, layer = "cb_2014_17_bg_500k")
-```
-
-    ## OGR data source with driver: ESRI Shapefile 
-    ## Source: "/Users/chadgevans/Research/Projects/Data/Shapefiles/Illinois_Shapefiles/Illinois_Shape_File", layer: "cb_2014_17_bg_500k"
-    ## with 9689 features
-    ## It has 10 fields
-    ## Integer64 fields read as strings:  ALAND AWATER
-
-    ## Warning in readOGR(dsn = datdir, layer = "cb_2014_17_bg_500k"): Z-dimension
-    ## discarded
-
-``` r
 cook.shp=Il.shp[Il.shp$COUNTYFP=="031",]
 chi.shp=readOGR(dsn = datdir3, layer = "City_Boundary")
-```
-
-    ## OGR data source with driver: ESRI Shapefile 
-    ## Source: "/Users/chadgevans/Research/Projects/Data/Shapefiles/Illinois_Shapefiles/Chicago_Shape_File/City_Boundary", layer: "City_Boundary"
-    ## with 1 features
-    ## It has 4 fields
-    ## Integer64 fields read as strings:  OBJECTID
-
-``` r
 water.shp=readOGR(dsn = datdir4, layer = "ne_10m_lakes")
-```
-
-    ## OGR data source with driver: ESRI Shapefile 
-    ## Source: "/Users/chadgevans/Research/Projects/Data/Shapefiles/Illinois_Shapefiles/Hydrography_Shape_File", layer: "ne_10m_lakes"
-    ## with 1353 features
-    ## It has 10 fields
-    ## Integer64 fields read as strings:  scalerank
-
-``` r
 pop=read_csv(file.path(datdir5, "ACS_13_5YR_B01003_with_ann.csv"), skip = 1)
 black=read_csv(file.path(datdir5, "ACS_13_5YR_B02009_with_ann.csv"), skip = 1)
 traveltime=read_csv(file.path(datdir5, "ACS_13_5YR_B08303_with_ann.csv"), skip=1)
@@ -72,34 +29,29 @@ medrooms=read_csv(file.path(datdir5, "ACS_13_5YR_B25018_with_ann.csv"), skip=1, 
 homeage=read_csv(file.path(datdir5, "ACS_13_5YR_B25034_with_ann.csv"), skip=1)
 medincome=read_csv(file.path(datdir5, "ACS_13_5YR_B19013_with_ann.csv"), skip=1, na = c("**","-","***","250,000+"))
 medvalue=read_csv(file.path(datdir5,"ACS_13_5YR_B25077_with_ann.csv"),skip=1, na = c("-","1,000,000+"))
-```
-
-    ## Warning: 1 parsing failure.
-    ## row # A tibble: 1 x 5 col     row                              col               expected actual expected   <int>                            <chr>                  <chr>  <chr> actual 1  3464 Estimate; Median value (dollars) no trailing characters  ,000- file # ... with 1 more variables: file <chr>
-
-``` r
 crimedata=read_csv(file.path(datdir6,"Crimedata.csv")) # this is the 2013 data used in the paper
 #crimedata=read_csv(file.path(datdir6,"Crimedata2.csv")) # this is the most recent crime data from the last year
 schooldata=read_csv(file.path(datdir7, "schooldata.csv")) %>% mutate_if(is.character, factor)
 ```
 
-    ## Warning: Missing column names filled in: 'X1' [1]
-
-``` r
-schools.shp <- SpatialPointsDataFrame(coords = schooldata[, c("Longitude","Latitude")],data = schooldata)
-```
+Now project all the shapefiles to the same coordinate system.
 
 ``` r
 Il.shp <- spTransform(Il.shp, CRS=CRS("+proj=longlat +datum=WGS84")) 
 cook.shp <- spTransform(cook.shp, CRS=CRS("+proj=longlat +datum=WGS84")) 
 chi.shp <- spTransform(chi.shp, CRS=CRS("+proj=longlat +datum=WGS84")) 
 water.shp <- spTransform(water.shp, CRS=CRS("+proj=longlat +datum=WGS84")) 
-proj4string(schools.shp) <- CRS("+proj=longlat +datum=WGS84")
+```
 
+Use spatial joins to create chicago city block (tracts) shapefile.
+
+``` r
 d <- over(cook.shp, chi.shp[,"OBJECTID"]) # need dependent projections correct
 cook.shp$bcode <- d$OBJECTID
 chiblocks.shp<-cook.shp[!is.na(cook.shp$bcode)=="TRUE",]
 ```
+
+Clean up files and reduce to necessary files.
 
 ``` r
 medrooms$`Estimate; Median number of rooms`[c(1933,1934,1936:1941,1943,1944)]<-9.0 # hack to resolve 9.0+ character, imposes ceiling of 9 rooms.
@@ -114,32 +66,32 @@ medrooms<- medrooms %>% rename(MEDROOMS = `Estimate; Median number of rooms`) %>
 homeage<-homeage %>% mutate(PCTHOMEAGE40 = `Estimate; Total: - Built 1939 or earlier`/`Estimate; Total:`) %>% select(Id,PCTHOMEAGE40)
 medincome<- medincome %>% rename(MEDINCOME = `Estimate; Median household income in the past 12 months (in 2013 inflation-adjusted dollars)`) %>% select(Id,MEDINCOME)
 medvalue<- medvalue %>% rename(MEDVALUE = `Estimate; Median value (dollars)`) %>% select(Id,MEDVALUE)
-crimedata<-crimedata %>% select(Longitude,Latitude) 
+crimedata<-crimedata %>% select(Longitude,Latitude) %>% na.omit() # 1926 or 0.006288015 or .01% missing data
 crimedata$COUNT=1 # One incident at each unique longitude and latitude combo
-crimedata=na.omit(crimedata) # 1926 or 0.006288015 or .01% missing data
 ```
+
+Merge all necessary columns into Tidy-formated data frame.
 
 ``` r
 dfs_list <- list(pctblack,traveltime,medrooms,homeage, medincome, medvalue)
 df<-Reduce(left_join, dfs_list)
+rm(pctblack,traveltime,medrooms,homeage, medincome, medvalue)
 
 chiblocks.shp@data <- chiblocks.shp@data %>% as_data_frame %>% rename(Id = `AFFGEOID`) 
 chiblocks.shp@data <- left_join(chiblocks.shp@data, df)
-```
 
-    ## Warning in left_join_impl(x, y, by$x, by$y, suffix$x, suffix$y): joining
-    ## character vector and factor, coercing into character vector
-
-``` r
 crime.shp <- SpatialPointsDataFrame(coords = crimedata[, c("Longitude","Latitude")], data = data.frame(values = crimedata$COUNT))
 proj4string(crime.shp) <- CRS("+proj=longlat +datum=WGS84")
 crime.shp@data <- crime.shp@data %>% as_data_frame()
 ```
 
+Exploratory Analysis
+====================
+
 Chicago Blocks Map
 ------------------
 
-These are some of the important shapefiles necessary for calculating block-level information.
+Let's make sure all the spatial joins were done properly. First, let's plot all the geographies: USA, Il, cook, and city of chicago.
 
 ``` r
 plot(USA.shp, ylim=c(41.6, 42), xlim=c(-88.4, -87.35),col = "wheat2",bg="azure2", main="City of Chicago, Situated within Cook County")
@@ -148,12 +100,12 @@ plot(chiblocks.shp, add=T, col="red3")
 legend("bottomleft", inset=.05, c("Cook County","City of Chicago"), fill=c("lightgrey","red3"), horiz=FALSE, bg="white")  
 ```
 
-![](Magnet_Analysis_files/figure-markdown_github/City%20of%20Chicago%20in%20Cook%20County-1.png)
+![](graphs/Chicago_Cook_County_Map-1.png)
 
 Majority African American Blocks
 --------------------------------
 
-This is just a diagnostic map to make sure spatial joins are working properly. We know the southside and westside of Chicago has majority black residents, consistent with the map
+Let's highlight the areas of Chicago that are majority African American. The southside and westside of Chicago should have majority black residents.
 
 ``` r
 plot(USA.shp, ylim=c(41.6, 42), xlim=c(-88.4, -87.35),col = "wheat2",bg="azure2", main="African American Census Blocks in Cook County")
@@ -164,12 +116,14 @@ plot(pctblack.shp[sel, ], col = "turquoise", add = TRUE) # add selected zones to
 legend("bottomleft", inset=.05, c("Blocks with Majority \n African Americans"), fill=c("turquoise"), horiz=FALSE, bg="white") 
 ```
 
-![](Magnet_Analysis_files/figure-markdown_github/Majority%20Black%20Census%20Tracts-1.png)
+![](graphs/Majority%20Black%20Census%20Tracts-1.png)
+
+This map is consistent with expectations.
 
 Crime in the City of Chicago
 ----------------------------
 
-Here we spatially join crime statistics with block level geographies and then sum the crime incidents in each block. We divide the number of crimes in each block by the ACS population in each black, thereby giving a measure of crime prevalence relative to the popluation in the block. To be clear, this I only divided by the ACS sample and did not scale it up to an estimate of the population. Thus, this is not a true per capita rate, but a measure that functions the same.
+Our analysis needs to factor in crime rates across Chicago city blocks. To calculate crime rates, we spatially join crime incidents to block level geographies. Then we sum up the number of crime incidents and divide by a measure of the population in each black. Using ACS data, I divided by the number of respondents in each tract. This is not a traditional crime rate as I did not scale up to an estimate of the population in each tract. However, this does produce an equally good measure of crime prevalence that differs only by the sample weight.
 
 ``` r
 n_crimes <- over(chiblocks.shp, crime.shp, fn=sum) %>% as_data_frame()
@@ -179,6 +133,8 @@ chiblocks.shp@data <- chiblocks.shp@data %>% mutate(PERCAPCRIME = COUNTS/POP) # 
 chiblocks.shp$PERCAPCRIME[chiblocks.shp$PERCAPCRIME>10]<-0 # Because these blocks have 0 population or were not counted by ACS, resulting in -inf, set to zero
 ```
 
+Now let's plot the high crime areas of Chicago. I expect there to be higher crime in the downtown and south and west side. The periphery, particularly the north, should have lower crime rates.
+
 ``` r
 plot(USA.shp, ylim=c(41.6, 42), xlim=c(-88.4, -87.35),col = "wheat2",bg="azure2", main="High Crime Census Blocks in Cook County")
 box()
@@ -187,18 +143,19 @@ plot(chiblocks.shp[chiblocks.shp$PERCAPCRIME > .2, ], col = "orange", add = TRUE
 legend("bottomleft", inset=.05, c("Blocks with > .2 \n crimes per ACS respondent"), fill=c("orange"), horiz=FALSE, bg="white") 
 ```
 
-![](Magnet_Analysis_files/figure-markdown_github/High%20Crime%20Census%20Blocks%20in%20Chicago-1.png)
+![](graphs/High%20Crime%20Census%20Blocks%20in%20Chicago-1.png)
 
 Elementary Schools in Chicago
 -----------------------------
 
-Using school report card data from 2013....
+First, create a shapefile based on the geographical location of each school. Project this file into the working coordinate system.
 
 ``` r
-#schooldata1=read.csv("/Users/chadgevans/Desktop/R_Tutorials/aff_download/Chicago_Public_Schools_-_Elementary_School_Progress_Report__2013-2014_2.csv")
-#schooldata2=read.xls("/Users/chadgevans/Desktop/R_Tutorials/aff_download/CPS_Elementary_Schools3.xls")
-#schooldata=merge(schooldata1,schooldata2, by=c("Longitude","Latitude"), all.x=T)
+schools.shp <- SpatialPointsDataFrame(coords = schooldata[, c("Longitude","Latitude")],data = schooldata)
+proj4string(schools.shp) <- CRS("+proj=longlat +datum=WGS84")
 ```
+
+Now, let's plot those schools over the city of chicago base file.
 
 ``` r
 plot(USA.shp, ylim=c(41.64454, 42.02304), xlim=c(-87.94011, -87.52414),col = "wheat2",bg="azure2", main="Elementary Schools in Chicago")
@@ -208,7 +165,7 @@ plot(schools.shp, pch = 17, add=T, col="red")
 legend("bottomleft", inset=.05, pch = 17, c("Elementary School"), col="red", horiz=FALSE, bg="white")   
 ```
 
-![](Magnet_Analysis_files/figure-markdown_github/unnamed-chunk-2-1.png)
+![](graphs/unnamed-chunk-1-1.png)
 
 ``` r
 png(file.path(Graph_Directory,"Chicago_Elem_Schools_2013.png"), width = 1500, height = 1500)
@@ -312,7 +269,7 @@ labs(x='', y='% missing', title='Percent missing data by feature') +
 theme(axis.text.x=element_text(angle=90, hjust=1))
 ```
 
-![](Magnet_Analysis_files/figure-markdown_github/Missing%20data-1.png) Of 49 columns, 20 have missing values. The percentage of values missing ranges from 0.5% in PCTBLACK to 4.1% in MEDVALUE. Very little missing data. Listwise deletion will work fine.
+![](graphs/Missing%20data-1.png) Of 49 columns, 20 have missing values. The percentage of values missing ranges from 0.5% in PCTBLACK to 4.1% in MEDVALUE. Very little missing data. Listwise deletion will work fine.
 
 Descriptive Statistics
 ----------------------
@@ -326,7 +283,7 @@ data %>%
   corrplot()
 ```
 
-![](Magnet_Analysis_files/figure-markdown_github/Descriptive%20Statistics-1.png) Variables seem to be correlated as expected.
+![](graphs/Descriptive%20Statistics-1.png) Variables seem to be correlated as expected.
 
 Correlation between school types and educational quality.
 
@@ -382,8 +339,8 @@ kable(Table)
 | Proportion Exceeding ISAT Reading           |            12.81|      27.29|           14.88|
 | Proportion Exceeding ISAT Math              |            17.11|      32.77|           19.51|
 
-Analysis{analysis}
-------------------
+Analysis
+--------
 
 ``` r
 mod=lm(log(MEDVALUE)~Magnet, data=data)
@@ -393,7 +350,7 @@ mod=lm(log(MEDVALUE)~Type2+CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGP
 ```
 
 Sensitivity Test
-================
+----------------
 
 ``` r
 data2 <- data %>% filter(Closed==0)
