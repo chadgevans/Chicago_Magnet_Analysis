@@ -23,7 +23,7 @@ Built with `r getRversion()`.  Last on `r params$d`.
 # Set Up{#setup}
 First, set up the environment: read in the libraries, indicate the directories, read in and clean the data.
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, fig.width=10, fig.height=10, fig.path='graphs/')
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, fig.width=7, fig.height=7, fig.path='graphs/')
 ```
 
 ```{r Libraries, include=FALSE}
@@ -119,7 +119,7 @@ plot(chiblocks.shp, add=T, col="red3")
 legend("bottomleft", inset=.05, c("Cook County","City of Chicago"), fill=c("lightgrey","red3"), horiz=FALSE, bg="white")  
 ```
 
-![Caption](graphs/Chicago_Cook_County_Map-1.png) <!-- .element height="50%" width="50%" -->
+![Caption](graphs/Chicago_Cook_County_Map-1.png)
 
 ## Majority African American Blocks {#aamap}
 Let's highlight the areas of Chicago that are majority African American.  The southside and westside of Chicago should have majority black residents. 
