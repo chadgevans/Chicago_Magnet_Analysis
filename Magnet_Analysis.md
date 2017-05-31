@@ -2,7 +2,7 @@ Magnet Analysis
 ================
 Chad Evans
 
-Built with 3.3.2. Last on 2017-05-31.
+Built with 3.3.2. Last run on 2017-05-31.
 
 -   [Set Up](#setup)
 -   [Chicago Map](#chicagomap)
@@ -101,7 +101,7 @@ plot(chiblocks.shp, add=T, col="red3")
 legend("bottomleft", inset=.05, c("Cook County","City of Chicago"), fill=c("lightgrey","red3"), horiz=FALSE, bg="white")  
 ```
 
-<img src="graphs/Chicago_Cook_County_Map-1.png" alt="alt text" width="600" height="600">
+<img src="graphs/Chicago_Cook_County_Map-1.png" alt="alt text" width="400" height="400">
 
 Majority African American Blocks
 --------------------------------
