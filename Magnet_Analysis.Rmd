@@ -5,7 +5,11 @@ output:
   github_document:
   toc: true
 always_allow_html: yes
+params:
+ n: 100
+ d: !r Sys.Date() 
 ---
+Built with `r getRversion()`.  Last on `r params$d`.
 
 * [Set Up](#setup)
 * [Chicago Map](#chicagomap)
@@ -16,10 +20,10 @@ always_allow_html: yes
 * [Descriptive Statistics](#descriptives)
 * [Analysis](#analysis)
 
-# Set Up {#setup}
+# Set Up{#setup}
 First, set up the environment: read in the libraries, indicate the directories, read in and clean the data.
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, fig.width=4, fig.height=4, fig.path='graphs/')
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, fig.width=10, fig.height=10, fig.path='graphs/')
 ```
 
 ```{r Libraries, include=FALSE}
@@ -54,8 +58,7 @@ medrooms=read_csv(file.path(datdir5, "ACS_13_5YR_B25018_with_ann.csv"), skip=1, 
 homeage=read_csv(file.path(datdir5, "ACS_13_5YR_B25034_with_ann.csv"), skip=1)
 medincome=read_csv(file.path(datdir5, "ACS_13_5YR_B19013_with_ann.csv"), skip=1, na = c("**","-","***","250,000+"))
 medvalue=read_csv(file.path(datdir5,"ACS_13_5YR_B25077_with_ann.csv"),skip=1, na = c("-","1,000,000+"))
-crimedata=read_csv(file.path(datdir6,"Crimedata.csv")) # this is the 2013 data used in the paper
-#crimedata=read_csv(file.path(datdir6,"Crimedata2.csv")) # this is the most recent crime data from the last year
+crimedata=read_csv(file.path(datdir6,"Crimedata.csv"))
 schooldata=read_csv(file.path(datdir7, "schooldata.csv")) %>% mutate_if(is.character, factor)
 ```
 Now project all the shapefiles to the same coordinate system.
@@ -109,12 +112,14 @@ crime.shp@data <- crime.shp@data %>% as_data_frame()
 ## Chicago Blocks Map {#chicagomap}
 Let's make sure all the spatial joins were done properly.  First, let's plot all the geographies: USA, Il, cook, and city of chicago.
 
-```{r Chicago_Cook_County_Map}
+```{r Chicago_Cook_County_Map, fig.show="hide"}
 plot(USA.shp, ylim=c(41.6, 42), xlim=c(-88.4, -87.35),col = "wheat2",bg="azure2", main="City of Chicago, Situated within Cook County")
 plot(cook.shp, add=T,col="lightgrey")
 plot(chiblocks.shp, add=T, col="red3")
 legend("bottomleft", inset=.05, c("Cook County","City of Chicago"), fill=c("lightgrey","red3"), horiz=FALSE, bg="white")  
 ```
+
+![Caption](graphs/Chicago_Cook_County_Map-1.png) 
 
 ## Majority African American Blocks {#aamap}
 Let's highlight the areas of Chicago that are majority African American.  The southside and westside of Chicago should have majority black residents. 
@@ -275,7 +280,7 @@ Table<-data %>%
   round(digits = 2)
 colnames(Table) = c("Open Enrollment","Magnet","Magnet Cluster")
 row.names(Table)<-c("Average Median Home Value","Crime Rate","Median # of Rooms","Median Income","Proportion Traveling >30 Minutes to Work","Proportion of Homes Built Before 1940","Proportion Black","Lake Michigan","Proportion Exceeding ISAT Reading","Proportion Exceeding ISAT Math")
-kable(Table)
+kable(Table, caption = "Caption here")
 ```
 
 ## Analysis{#analysis}

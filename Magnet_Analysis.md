@@ -2,6 +2,8 @@ Magnet Analysis
 ================
 Chad Evans
 
+Built with 3.3.2. Last on 2017-05-31.
+
 -   [Set Up](#setup)
 -   [Chicago Map](#chicagomap)
 -   [Majority African American Blocks](#aamap)
@@ -29,8 +31,7 @@ medrooms=read_csv(file.path(datdir5, "ACS_13_5YR_B25018_with_ann.csv"), skip=1, 
 homeage=read_csv(file.path(datdir5, "ACS_13_5YR_B25034_with_ann.csv"), skip=1)
 medincome=read_csv(file.path(datdir5, "ACS_13_5YR_B19013_with_ann.csv"), skip=1, na = c("**","-","***","250,000+"))
 medvalue=read_csv(file.path(datdir5,"ACS_13_5YR_B25077_with_ann.csv"),skip=1, na = c("-","1,000,000+"))
-crimedata=read_csv(file.path(datdir6,"Crimedata.csv")) # this is the 2013 data used in the paper
-#crimedata=read_csv(file.path(datdir6,"Crimedata2.csv")) # this is the most recent crime data from the last year
+crimedata=read_csv(file.path(datdir6,"Crimedata.csv"))
 schooldata=read_csv(file.path(datdir7, "schooldata.csv")) %>% mutate_if(is.character, factor)
 ```
 
@@ -100,7 +101,7 @@ plot(chiblocks.shp, add=T, col="red3")
 legend("bottomleft", inset=.05, c("Cook County","City of Chicago"), fill=c("lightgrey","red3"), horiz=FALSE, bg="white")  
 ```
 
-![](graphs/Chicago_Cook_County_Map-1.png)
+![Caption](graphs/Chicago_Cook_County_Map-1.png)
 
 Majority African American Blocks
 --------------------------------
@@ -317,7 +318,7 @@ Table<-data %>%
   round(digits = 2)
 colnames(Table) = c("Open Enrollment","Magnet","Magnet Cluster")
 row.names(Table)<-c("Average Median Home Value","Crime Rate","Median # of Rooms","Median Income","Proportion Traveling >30 Minutes to Work","Proportion of Homes Built Before 1940","Proportion Black","Lake Michigan","Proportion Exceeding ISAT Reading","Proportion Exceeding ISAT Math")
-kable(Table)
+kable(Table, caption = "Caption here")
 ```
 
 |                                             |  Open Enrollment|     Magnet|  Magnet Cluster|
