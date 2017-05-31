@@ -119,7 +119,7 @@ plot(chiblocks.shp, add=T, col="red3")
 legend("bottomleft", inset=.05, c("Cook County","City of Chicago"), fill=c("lightgrey","red3"), horiz=FALSE, bg="white")  
 ```
 
-![Caption](graphs/Chicago_Cook_County_Map-1.png)
+![Caption](graphs/Chicago_Cook_County_Map-1.png =100x100)
 
 ## Majority African American Blocks {#aamap}
 Let's highlight the areas of Chicago that are majority African American.  The southside and westside of Chicago should have majority black residents. 
