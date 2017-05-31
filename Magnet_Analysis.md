@@ -101,7 +101,7 @@ plot(chiblocks.shp, add=T, col="red3")
 legend("bottomleft", inset=.05, c("Cook County","City of Chicago"), fill=c("lightgrey","red3"), horiz=FALSE, bg="white")  
 ```
 
-![Caption](graphs/Chicago_Cook_County_Map-1.png)<!-- .element height="25%" width="25%" -->
+![Caption](graphs/Chicago_Cook_County_Map-1.png) <img src="graphs/Chicago_Cook_County_Map-1.png" alt="alt text" width="300" height="300">
 
 Majority African American Blocks
 --------------------------------
