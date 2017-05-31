@@ -100,7 +100,7 @@ plot(chiblocks.shp, add=T, col="red3")
 legend("bottomleft", inset=.05, c("Cook County","City of Chicago"), fill=c("lightgrey","red3"), horiz=FALSE, bg="white")  
 ```
 
-![](graphs/Chicago_Cook_County_Map-1.png)
+![](/Users/chadgevans/Research/Projects/Chicago_Magnet_Analysis/graphs/Chicago_Cook_County_Map-1.png)
 
 Majority African American Blocks
 --------------------------------
@@ -116,7 +116,7 @@ plot(pctblack.shp[sel, ], col = "turquoise", add = TRUE) # add selected zones to
 legend("bottomleft", inset=.05, c("Blocks with Majority \n African Americans"), fill=c("turquoise"), horiz=FALSE, bg="white") 
 ```
 
-![](graphs/Majority%20Black%20Census%20Tracts-1.png)
+![](/Users/chadgevans/Research/Projects/Chicago_Magnet_Analysis/graphs/Majority_Black_Census_Tracts_Map-1.png)
 
 This map is consistent with expectations.
 
@@ -143,7 +143,7 @@ plot(chiblocks.shp[chiblocks.shp$PERCAPCRIME > .2, ], col = "orange", add = TRUE
 legend("bottomleft", inset=.05, c("Blocks with > .2 \n crimes per ACS respondent"), fill=c("orange"), horiz=FALSE, bg="white") 
 ```
 
-![](graphs/High%20Crime%20Census%20Blocks%20in%20Chicago-1.png)
+![](/Users/chadgevans/Research/Projects/Chicago_Magnet_Analysis/graphs/High_Crime_Census_Blocks_in_Chicago-1.png)
 
 Elementary Schools in Chicago
 -----------------------------
@@ -165,10 +165,9 @@ plot(schools.shp, pch = 17, add=T, col="red")
 legend("bottomleft", inset=.05, pch = 17, c("Elementary School"), col="red", horiz=FALSE, bg="white")   
 ```
 
-![](graphs/unnamed-chunk-1-1.png)
+![](/Users/chadgevans/Research/Projects/Chicago_Magnet_Analysis/graphs/Elem_Schools_in_Chicago_Map-1.png)
 
 ``` r
-png(file.path(Graph_Directory,"Chicago_Elem_Schools_2013.png"), width = 1500, height = 1500)
 plot(USA.shp, ylim=c(41.63454, 42.02304), xlim=c(-87.94011, -87.52414),col = "wheat2",bg="azure2")
 box()
 plot(chiblocks.shp, add=T, col="lightgrey")
@@ -182,15 +181,12 @@ legend("bottomleft", inset=.05, pch = c(17,17,17,15), c("Traditional Magnet","Ma
 mtext("Lake Michigan             ",side=1,line=-75,adj=1,cex=2.5,col="darkblue")
 mtext("Source: Chicago Public Schools Data Portal 2013-2014. Map excludes elementary charters, magnets that require admissions tests, \n small schools and special education schools.",side=1,line=3,adj=0,cex=2,col="black")
 mtext("           Illinois",side=1,line=-45,adj=0,cex=3,col="black")
-dev.off()
 ```
 
-    ## quartz_off_screen 
-    ##                 2
+![](/Users/chadgevans/Research/Projects/Chicago_Magnet_Analysis/graphs/School_Types_Chicago_Color-1.png)
 
 ``` r
-png(file.path(Graph_Directory,"Chicago_Elem_Schools_2013_bw.png"), width = 1500, height = 1500)
-plot(USA.shp, ylim=c(41.63454, 42.02304), xlim=c(-87.94011, -87.52414),col = "lightgrey",bg="azure2")
+plot(USA.shp, ylim=c(41.63454, 42.02304), xlim=c(-87.94011, -87.52414),col = "lightgrey",bg="gray96")
 box()
 plot(chiblocks.shp, add=T, col="white")
 magnets.shp<-schools.shp[schools.shp$Type2=="Magnet",]
@@ -203,11 +199,9 @@ legend("bottomleft", inset=.05, pch = c(17,17,17,22), c("Traditional Magnet","Ma
 mtext("Lake Michigan             ",side=1,line=-75,adj=1,cex=2.5,col="darkblue")
 mtext("Source: Chicago Public Schools Data Portal 2013-2014. Map excludes elementary charters, magnets that require admissions tests, \n small schools and special education schools.",side=1,line=3,adj=0,cex=2,col="black")
 mtext("           Illinois",side=1,line=-45,adj=0,cex=3,col="black")
-dev.off()
 ```
 
-    ## quartz_off_screen 
-    ##                 2
+![](/Users/chadgevans/Research/Projects/Chicago_Magnet_Analysis/graphs/School_Types_Chicago_BW-1.png)
 
 Chicago blocks on Lake Michigan
 -------------------------------
@@ -269,7 +263,7 @@ labs(x='', y='% missing', title='Percent missing data by feature') +
 theme(axis.text.x=element_text(angle=90, hjust=1))
 ```
 
-![](graphs/Missing%20data-1.png) Of 49 columns, 20 have missing values. The percentage of values missing ranges from 0.5% in PCTBLACK to 4.1% in MEDVALUE. Very little missing data. Listwise deletion will work fine.
+![](/Users/chadgevans/Research/Projects/Chicago_Magnet_Analysis/graphs/Missing%20data-1.png) Of 49 columns, 20 have missing values. The percentage of values missing ranges from 0.5% in PCTBLACK to 4.1% in MEDVALUE. Very little missing data. Listwise deletion will work fine.
 
 Descriptive Statistics
 ----------------------
@@ -283,7 +277,7 @@ data %>%
   corrplot()
 ```
 
-![](graphs/Descriptive%20Statistics-1.png) Variables seem to be correlated as expected.
+![](/Users/chadgevans/Research/Projects/Chicago_Magnet_Analysis/graphs/Descriptive%20Statistics-1.png) Variables seem to be correlated as expected.
 
 Correlation between school types and educational quality.
 
