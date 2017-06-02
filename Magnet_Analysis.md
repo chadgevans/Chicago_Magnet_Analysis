@@ -170,7 +170,7 @@ legend("bottomleft", inset=.05, pch = 17, c("Elementary School"), col="red", hor
 <img src="graphs/Elem_Schools_in_Chicago_Map-1.png" width="500" height="500">
 
 ``` r
-plot(USA.shp, ylim=c(41.63454, 42.02304), xlim=c(-87.94011, -87.52414),col = "wheat2",bg="azure2")
+plot(USA.shp, ylim=c(41.63454, 42.02304), xlim=c(-87.94011, -87.52414),col = "wheat2",bg="azure2",)
 box()
 plot(chiblocks.shp, add=T, col="lightgrey")
 magnets.shp<-schools.shp[schools.shp$Type2=="Magnet",]
@@ -180,7 +180,7 @@ plot(magnets.shp, pch = 17, add=T, col="red",cex=1)
 plot(clusters.shp, pch = 17, add=T, col="blue",cex=1)
 plot(openenroll.shp, pch = 17, add=T, col="darkgreen",cex=1)
 legend("bottomleft", inset=.05, pch = c(17,17,17,15), c("Traditional Magnet","Magnet Cluster","Neighborhood School", "Chicago Census Block"), col=c("red","blue","darkgreen","lightgrey"), horiz=FALSE, cex=1)   
-mtext("Lake Michigan             ",side=1,line=-75,adj=1,cex=2.5,col="darkblue")
+mtext("Lake Michigan             ",side=1,line=-75,adj=1,cex=1.5,col="darkblue")
 mtext("Source: Chicago Public Schools Data Portal 2013-2014. Map excludes elementary charters, magnets that require admissions tests, \n small schools and special education schools.",side=1,line=3,adj=0,cex=2,col="black")
 mtext("           Illinois",side=1,line=-45,adj=0,cex=3,col="black")
 ```
@@ -194,10 +194,10 @@ plot(chiblocks.shp, add=T, col="white")
 magnets.shp<-schools.shp[schools.shp$Type2=="Magnet",]
 clusters.shp<-schools.shp[schools.shp$Type2=="Magnet Cluster",]
 openenroll.shp<-schools.shp[schools.shp$Type2=="Open Enrollment", ]
-plot(magnets.shp, pch = 17, add=T, col="black",cex=2.5)
-plot(clusters.shp, pch = 17, add=T, col="gray44",cex=2.5)
-plot(openenroll.shp, pch = 17, add=T, col="grey64",cex=2.5)
-legend("bottomleft", inset=.05, pch = c(17,17,17,22), c("Traditional Magnet","Magnet Cluster","Neighborhood School", "Chicago Census Block"), col=c("black","gray44","gray64","black"), horiz=FALSE, cex=2.5)   
+plot(magnets.shp, pch = 17, add=T, col="black",cex=1)
+plot(clusters.shp, pch = 17, add=T, col="gray44",cex=1)
+plot(openenroll.shp, pch = 17, add=T, col="grey64",cex=1)
+legend("bottomleft", inset=.05, pch = c(17,17,17,22), c("Traditional Magnet","Magnet Cluster","Neighborhood School", "Chicago Census Block"), col=c("black","gray44","gray64","black"), horiz=FALSE, cex=1.5)   
 mtext("Lake Michigan             ",side=1,line=-75,adj=1,cex=2.5,col="darkblue")
 mtext("Source: Chicago Public Schools Data Portal 2013-2014. Map excludes elementary charters, magnets that require admissions tests, \n small schools and special education schools.",side=1,line=3,adj=0,cex=2,col="black")
 mtext("           Illinois",side=1,line=-45,adj=0,cex=3,col="black")
@@ -214,27 +214,17 @@ x<-gRelate(chiblocks.shp, ShapeFile.Dissolved, byid= TRUE)
 poly.border<-which(x %in% c("2FF11F212"))
 #library(raster)  # crop from raster() requires select() from base
 michblocks.shp <- raster::crop(chiblocks.shp[poly.border,], raster::extent(-87.673, -87.525, 41.70, 42.25))
-```
-
-    ## Warning: Setting row names on a tibble is deprecated.
-
-    ## Warning: Setting row names on a tibble is deprecated.
-
-``` r
 michblocks.shp$MICH<-1
 chiblocks.shp@data$MICH<-0
 rows <- row.names(michblocks.shp@data)
 chiblocks.shp@data[rows, "MICH"] <- michblocks.shp@data$MICH
 spjoin <- over(schools.shp, chiblocks.shp) %>% as_data_frame() 
-```
-
-    ## Warning: Setting row names on a tibble is deprecated.
-
-``` r
 data=bind_cols(schools.shp@data, spjoin)
 ```
 
 There are no schools located in neighborhoods that directly border Lake Michigan
+
+Let's change the reference category of the schools to "Open Enrollment" and only examine the three school types of the study (i.e., Open Enrollment, Magnet Cluster and Tradititional Magnet)
 
 ``` r
 data$Type=relevel(data$Type, ref="Open Enrollment")
@@ -282,42 +272,18 @@ data %>%
 Correlation between school types and educational quality.
 
 ``` r
-cor(data$Type2=="Magnet Cluster",data$ISAT.Exceeding.Reading..., use="pairwise.complete.obs")
+data %>% mutate(Cluster=data$Type2=="Magnet Cluster", Magnet=data$Type2=="Magnet") %>% select(Read=ISAT.Exceeding.Reading...,Math=ISAT.Exceeding.Math.., Cluster, Magnet) %>% cor(use = "pairwise.complete.obs")
 ```
 
-    ## [1] 0.01262809
+    ##               Read       Math     Cluster     Magnet
+    ## Read    1.00000000 0.93181068  0.01262809  0.3541225
+    ## Math    0.93181068 1.00000000  0.01710154  0.3341444
+    ## Cluster 0.01262809 0.01710154  1.00000000 -0.1642822
+    ## Magnet  0.35412255 0.33414443 -0.16428219  1.0000000
 
-``` r
-cor(data$Type2=="Magnet",data$ISAT.Exceeding.Reading..., use="pairwise.complete.obs") # 0.01262809 correlation of 0.3541225 (was 0.3234661)
-```
+High correlation between magnet status and measures of educational quality. There is virtually no correlation of magnet cluster with reading or math scores.
 
-    ## [1] 0.3541225
-
-``` r
-cor(data$Type2=="Magnet Cluster",data$ISAT.Exceeding.Math.., use="pairwise.complete.obs") #0.01710154
-```
-
-    ## [1] 0.01710154
-
-``` r
-cor(data$Type2=="Magnet",data$ISAT.Exceeding.Math.., use="pairwise.complete.obs") # 0.3341444
-```
-
-    ## [1] 0.3341444
-
-``` r
-data %>% 
-  group_by(Type) %>%
-  summarise(AVG_MEDIAN= mean(MEDVALUE, na.rm=T)) %>% 
-  print()
-```
-
-    ## # A tibble: 3 x 2
-    ##              Type AVG_MEDIAN
-    ##            <fctr>      <dbl>
-    ## 1 Open Enrollment   209308.4
-    ## 2          Magnet   321000.0
-    ## 3  Magnet Cluster   252610.8
+### Descriptive Statistics
 
 ``` r
 Table<-data %>% 
@@ -344,8 +310,21 @@ kable(Table)
 | Proportion Exceeding ISAT Reading           |            12.81|      27.29|           14.88|
 | Proportion Exceeding ISAT Math              |            17.11|      32.77|           19.51|
 
+Exploratory Analyses
+--------------------
+
+``` r
+mod=lm(log(MEDVALUE)~Specialty+PERCAPCRIME+CBk+CBk2+log(PCT30MIN)+CMEDROOMS+CMEDROOMS2+PCTHOMEAGE40+log(MEDINCOME), data=data)
+
+# When Interaction Term is included
+mod=lm(log(MEDVALUE)~Type2+CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CREAD*Type2, data=data)
+mod=lm(log(MEDVALUE)~Type2+CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CMATH+CMATH*Type2, data=data)
+```
+
 Analysis
 --------
+
+### Table 2
 
 ``` r
 mod0<-lm(log(MEDVALUE)~Magnet, data=data)
@@ -360,21 +339,24 @@ Table2<-do.call(cbind, lapply(coefs01, function (x) {
   rbind(x, matrix(, n-nrow(x), ncol(x)))
 })) 
 row.names(Table2)<-Varlist
+colnames(Table2)[c(3,6)]<-c("p-value","p-value")
 kable(round(Table2,2))
 ```
 
-|                                       |  Estimate|  Std. Error|  Pr(&gt;|t|)|  Estimate|  Std. Error|  Pr(&gt;|t|)|
-|---------------------------------------|---------:|-----------:|------------:|---------:|-----------:|------------:|
-| Intercept                             |     12.15|        0.03|            0|     12.09|        0.06|         0.00|
-| Magnet (ref=Neighborhood Schools)     |      0.21|        0.05|            0|      0.10|        0.04|         0.02|
-| Crime Rate                            |        NA|          NA|           NA|     -0.48|        0.20|         0.02|
-| Median Number of Rooms                |        NA|          NA|           NA|     -0.13|        0.03|         0.00|
-| Median Number of Rooms^2              |        NA|          NA|           NA|      0.04|        0.02|         0.00|
-| log(Median Income)                    |        NA|          NA|           NA|      0.37|        0.05|         0.00|
-| log(Proportion Commuting &gt; 30 min) |        NA|          NA|           NA|     -0.39|        0.08|         0.00|
-| Proportion of Homes Build before 1940 |        NA|          NA|           NA|      0.13|        0.09|         0.13|
-| Proportion Black                      |        NA|          NA|           NA|     -0.20|        0.07|         0.00|
-| Proportion Black^2                    |        NA|          NA|           NA|      0.27|        0.26|         0.30|
+|                                       |  Estimate|  Std. Error|  p-value|  Estimate|  Std. Error|  p-value|
+|---------------------------------------|---------:|-----------:|--------:|---------:|-----------:|--------:|
+| Intercept                             |     12.15|        0.03|        0|     12.09|        0.06|     0.00|
+| Magnet (ref=Neighborhood Schools)     |      0.21|        0.05|        0|      0.10|        0.04|     0.02|
+| Crime Rate                            |        NA|          NA|       NA|     -0.48|        0.20|     0.02|
+| Median Number of Rooms                |        NA|          NA|       NA|     -0.13|        0.03|     0.00|
+| Median Number of Rooms^2              |        NA|          NA|       NA|      0.04|        0.02|     0.00|
+| log(Median Income)                    |        NA|          NA|       NA|      0.37|        0.05|     0.00|
+| log(Proportion Commuting &gt; 30 min) |        NA|          NA|       NA|     -0.39|        0.08|     0.00|
+| Proportion of Homes Build before 1940 |        NA|          NA|       NA|      0.13|        0.09|     0.13|
+| Proportion Black                      |        NA|          NA|       NA|     -0.20|        0.07|     0.00|
+| Proportion Black^2                    |        NA|          NA|       NA|      0.27|        0.26|     0.30|
+
+### Table 3
 
 ``` r
 mod2<-lm(log(MEDVALUE)~Type2+CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2, data=data)
@@ -389,36 +371,30 @@ Table3<-do.call(cbind, lapply(coefs23, function (x) {
   rbind(x, matrix(, n-nrow(x), ncol(x)))
 })) 
 row.names(Table3)<-Varlist
+colnames(Table3)[c(3,6)]<-c("p-value","p-value")
 kable(round(Table3,2))
 ```
 
-|                                           |  Estimate|  Std. Error|  Pr(&gt;|t|)|  Estimate|  Std. Error|  Pr(&gt;|t|)|
-|-------------------------------------------|---------:|-----------:|------------:|---------:|-----------:|------------:|
-| Intercept                                 |     12.09|        0.06|         0.00|     12.14|        0.06|         0.00|
-| Magnet (ref=Neighborhood Schools)         |      0.19|        0.07|         0.00|      0.02|        0.07|         0.75|
-| Magnet Cluster (ref=Neighborhood Schools) |      0.06|        0.05|         0.23|      0.05|        0.05|         0.30|
-| Crime Rate                                |     -0.48|        0.20|         0.02|     -0.43|        0.20|         0.03|
-| Median Number of Rooms                    |     -0.12|        0.03|         0.00|     -0.12|        0.03|         0.00|
-| Median Number of Rooms^2                  |      0.04|        0.02|         0.00|      0.03|        0.01|         0.04|
-| log(Median Income)                        |      0.38|        0.05|         0.00|      0.28|        0.05|         0.00|
-| log(Proportion Commuting &gt; 30 min)     |     -0.37|        0.08|         0.00|     -0.35|        0.07|         0.00|
-| Proportion of Homes Build before 1940     |      0.15|        0.09|         0.09|      0.21|        0.08|         0.01|
-| Proportion Black                          |     -0.20|        0.07|         0.00|     -0.13|        0.07|         0.08|
-| Proportion Black^2                        |      0.29|        0.26|         0.27|      0.14|        0.26|         0.58|
-| Stand. Reading Score                      |        NA|          NA|           NA|      0.02|        0.00|         0.00|
-| Stand. Math Score                         |        NA|          NA|           NA|      0.00|        0.00|         0.27|
+|                                           |  Estimate|  Std. Error|  p-value|  Estimate|  Std. Error|  p-value|
+|-------------------------------------------|---------:|-----------:|--------:|---------:|-----------:|--------:|
+| Intercept                                 |     12.09|        0.06|     0.00|     12.14|        0.06|     0.00|
+| Magnet (ref=Neighborhood Schools)         |      0.19|        0.07|     0.00|      0.02|        0.07|     0.75|
+| Magnet Cluster (ref=Neighborhood Schools) |      0.06|        0.05|     0.23|      0.05|        0.05|     0.30|
+| Crime Rate                                |     -0.48|        0.20|     0.02|     -0.43|        0.20|     0.03|
+| Median Number of Rooms                    |     -0.12|        0.03|     0.00|     -0.12|        0.03|     0.00|
+| Median Number of Rooms^2                  |      0.04|        0.02|     0.00|      0.03|        0.01|     0.04|
+| log(Median Income)                        |      0.38|        0.05|     0.00|      0.28|        0.05|     0.00|
+| log(Proportion Commuting &gt; 30 min)     |     -0.37|        0.08|     0.00|     -0.35|        0.07|     0.00|
+| Proportion of Homes Build before 1940     |      0.15|        0.09|     0.09|      0.21|        0.08|     0.01|
+| Proportion Black                          |     -0.20|        0.07|     0.00|     -0.13|        0.07|     0.08|
+| Proportion Black^2                        |      0.29|        0.26|     0.27|      0.14|        0.26|     0.58|
+| Stand. Reading Score                      |        NA|          NA|       NA|      0.02|        0.00|     0.00|
+| Stand. Math Score                         |        NA|          NA|       NA|      0.00|        0.00|     0.27|
 
-Sensitivity Test
-----------------
+### Sensitivity Test
+
+We can evaluate the sensitivity of our results by only looking at the schools that had not closed their doors since last year. Results do not change substantially.
 
 ``` r
 data2 <- data %>% filter(Closed==0)
-```
-
-``` r
-mod=lm(log(MEDVALUE)~Specialty+PERCAPCRIME+CBk+CBk2+log(PCT30MIN)+CMEDROOMS+CMEDROOMS2+PCTHOMEAGE40+log(MEDINCOME), data=data)
-
-# When Interaction Term is included
-mod=lm(log(MEDVALUE)~Type2+CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CREAD*Type2, data=data)
-mod=lm(log(MEDVALUE)~Type2+CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CMATH+CMATH*Type2, data=data)
 ```

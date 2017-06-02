@@ -22,7 +22,7 @@ Built with `r getRversion()`.  Last run on `r params$d`.
 # Set Up{#setup}
 First, set up the environment: read in the libraries, indicate the directories, read in and clean the data.
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, fig.width=7, fig.height=7, fig.path='graphs/')
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, fig.width=10, fig.height=10, fig.path='graphs/')
 ```
 
 ```{r Libraries, include=FALSE}
@@ -174,7 +174,7 @@ legend("bottomleft", inset=.05, pch = 17, c("Elementary School"), col="red", hor
 <img src="graphs/Elem_Schools_in_Chicago_Map-1.png" width="500" height="500">
 
 ```{r School_Types_Chicago_Color, fig.show="hide"}
-plot(USA.shp, ylim=c(41.63454, 42.02304), xlim=c(-87.94011, -87.52414),col = "wheat2",bg="azure2")
+plot(USA.shp, ylim=c(41.63454, 42.02304), xlim=c(-87.94011, -87.52414),col = "wheat2",bg="azure2",)
 box()
 plot(chiblocks.shp, add=T, col="lightgrey")
 magnets.shp<-schools.shp[schools.shp$Type2=="Magnet",]
@@ -184,7 +184,7 @@ plot(magnets.shp, pch = 17, add=T, col="red",cex=1)
 plot(clusters.shp, pch = 17, add=T, col="blue",cex=1)
 plot(openenroll.shp, pch = 17, add=T, col="darkgreen",cex=1)
 legend("bottomleft", inset=.05, pch = c(17,17,17,15), c("Traditional Magnet","Magnet Cluster","Neighborhood School", "Chicago Census Block"), col=c("red","blue","darkgreen","lightgrey"), horiz=FALSE, cex=1)   
-mtext("Lake Michigan             ",side=1,line=-75,adj=1,cex=2.5,col="darkblue")
+mtext("Lake Michigan             ",side=1,line=-75,adj=1,cex=1.5,col="darkblue")
 mtext("Source: Chicago Public Schools Data Portal 2013-2014. Map excludes elementary charters, magnets that require admissions tests, \n small schools and special education schools.",side=1,line=3,adj=0,cex=2,col="black")
 mtext("           Illinois",side=1,line=-45,adj=0,cex=3,col="black")
 ```
@@ -197,10 +197,10 @@ plot(chiblocks.shp, add=T, col="white")
 magnets.shp<-schools.shp[schools.shp$Type2=="Magnet",]
 clusters.shp<-schools.shp[schools.shp$Type2=="Magnet Cluster",]
 openenroll.shp<-schools.shp[schools.shp$Type2=="Open Enrollment", ]
-plot(magnets.shp, pch = 17, add=T, col="black",cex=2.5)
-plot(clusters.shp, pch = 17, add=T, col="gray44",cex=2.5)
-plot(openenroll.shp, pch = 17, add=T, col="grey64",cex=2.5)
-legend("bottomleft", inset=.05, pch = c(17,17,17,22), c("Traditional Magnet","Magnet Cluster","Neighborhood School", "Chicago Census Block"), col=c("black","gray44","gray64","black"), horiz=FALSE, cex=2.5)   
+plot(magnets.shp, pch = 17, add=T, col="black",cex=1)
+plot(clusters.shp, pch = 17, add=T, col="gray44",cex=1)
+plot(openenroll.shp, pch = 17, add=T, col="grey64",cex=1)
+legend("bottomleft", inset=.05, pch = c(17,17,17,22), c("Traditional Magnet","Magnet Cluster","Neighborhood School", "Chicago Census Block"), col=c("black","gray44","gray64","black"), horiz=FALSE, cex=1.5)   
 mtext("Lake Michigan             ",side=1,line=-75,adj=1,cex=2.5,col="darkblue")
 mtext("Source: Chicago Public Schools Data Portal 2013-2014. Map excludes elementary charters, magnets that require admissions tests, \n small schools and special education schools.",side=1,line=3,adj=0,cex=2,col="black")
 mtext("           Illinois",side=1,line=-45,adj=0,cex=3,col="black")
@@ -210,7 +210,7 @@ mtext("           Illinois",side=1,line=-45,adj=0,cex=3,col="black")
 
 ## Chicago blocks on Lake Michigan {#mich}
 
-```{r Identifying blocks bordering Lake Michigan}
+```{r Identifying blocks bordering Lake Michigan, warning=FALSE}
 ShapeFile.Dissolved<-gUnionCascaded(chiblocks.shp)
 x<-gRelate(chiblocks.shp, ShapeFile.Dissolved, byid= TRUE)
 poly.border<-which(x %in% c("2FF11F212"))
@@ -225,6 +225,7 @@ data=bind_cols(schools.shp@data, spjoin)
 ```
 There are no schools located in neighborhoods that directly border Lake Michigan
 
+Let's change the reference category of the schools to "Open Enrollment" and only examine the three school types of the study (i.e., Open Enrollment, Magnet Cluster and Tradititional Magnet)
 ```{r Relevel and Filter}
 data$Type=relevel(data$Type, ref="Open Enrollment")
 data$Type2=relevel(data$Type2, ref="Open Enrollment")
@@ -260,19 +261,13 @@ data %>%
 Variables seem to be correlated as expected.
 
 Correlation between school types and educational quality.
-```{r}
-cor(data$Type2=="Magnet Cluster",data$ISAT.Exceeding.Reading..., use="pairwise.complete.obs")
-cor(data$Type2=="Magnet",data$ISAT.Exceeding.Reading..., use="pairwise.complete.obs") # 0.01262809 correlation of 0.3541225 (was 0.3234661)
-cor(data$Type2=="Magnet Cluster",data$ISAT.Exceeding.Math.., use="pairwise.complete.obs") #0.01710154
-cor(data$Type2=="Magnet",data$ISAT.Exceeding.Math.., use="pairwise.complete.obs") # 0.3341444
+```{r corr matrix}
+data %>% mutate(Cluster=data$Type2=="Magnet Cluster", Magnet=data$Type2=="Magnet") %>% select(Read=ISAT.Exceeding.Reading...,Math=ISAT.Exceeding.Math.., Cluster, Magnet) %>% cor(use = "pairwise.complete.obs")
 ```
 
-```{r}
-data %>% 
-  group_by(Type) %>%
-  summarise(AVG_MEDIAN= mean(MEDVALUE, na.rm=T)) %>% 
-  print()
-```
+High correlation between magnet status and measures of educational quality.  There is virtually no correlation of magnet cluster with reading or math scores.
+
+### Descriptive Statistics
 
 ```{r}
 Table<-data %>% 
@@ -287,7 +282,18 @@ row.names(Table)<-c("Average Median Home Value","Crime Rate","Median # of Rooms"
 kable(Table)
 ```
 
+## Exploratory Analyses
+```{r Exploratory, eval=FALSE}
+mod=lm(log(MEDVALUE)~Specialty+PERCAPCRIME+CBk+CBk2+log(PCT30MIN)+CMEDROOMS+CMEDROOMS2+PCTHOMEAGE40+log(MEDINCOME), data=data)
+
+# When Interaction Term is included
+mod=lm(log(MEDVALUE)~Type2+CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CREAD*Type2, data=data)
+mod=lm(log(MEDVALUE)~Type2+CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CMATH+CMATH*Type2, data=data)
+```
+
+
 ## Analysis{#analysis}
+### Table 2
 
 ```{r Analysis}
 mod0<-lm(log(MEDVALUE)~Magnet, data=data)
@@ -302,10 +308,11 @@ Table2<-do.call(cbind, lapply(coefs01, function (x) {
   rbind(x, matrix(, n-nrow(x), ncol(x)))
 })) 
 row.names(Table2)<-Varlist
+colnames(Table2)[c(3,6)]<-c("p-value","p-value")
 kable(round(Table2,2))
 ```
 
-
+### Table 3
 
 ```{r}
 mod2<-lm(log(MEDVALUE)~Type2+CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2, data=data)
@@ -320,19 +327,14 @@ Table3<-do.call(cbind, lapply(coefs23, function (x) {
   rbind(x, matrix(, n-nrow(x), ncol(x)))
 })) 
 row.names(Table3)<-Varlist
+colnames(Table3)[c(3,6)]<-c("p-value","p-value")
 kable(round(Table3,2))
 
 ```
 
-## Sensitivity Test
+### Sensitivity Test
+We can evaluate the sensitivity of our results by only looking at the schools that had not closed their doors since last year.  Results do not change substantially.
+
 ```{r}
 data2 <- data %>% filter(Closed==0)
-```
-
-```{r Exploratory}
-mod=lm(log(MEDVALUE)~Specialty+PERCAPCRIME+CBk+CBk2+log(PCT30MIN)+CMEDROOMS+CMEDROOMS2+PCTHOMEAGE40+log(MEDINCOME), data=data)
-
-# When Interaction Term is included
-mod=lm(log(MEDVALUE)~Type2+CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CREAD*Type2, data=data)
-mod=lm(log(MEDVALUE)~Type2+CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CMATH+CMATH*Type2, data=data)
 ```
