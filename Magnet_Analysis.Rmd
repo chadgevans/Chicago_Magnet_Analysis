@@ -200,7 +200,7 @@ openenroll.shp<-schools.shp[schools.shp$Type2=="Open Enrollment", ]
 plot(magnets.shp, pch = 17, add=T, col="black",cex=1)
 plot(clusters.shp, pch = 17, add=T, col="gray44",cex=1)
 plot(openenroll.shp, pch = 17, add=T, col="grey64",cex=1)
-legend("bottomleft", inset=.05, pch = c(17,17,17,22), c("Traditional Magnet","Magnet Cluster","Neighborhood School", "Chicago Census Block"), col=c("black","gray44","gray64","black"), horiz=FALSE, cex=1.5)   
+legend("bottomleft", inset=.05, pch = c(17,17,17,22), c("Traditional Magnet","Magnet Cluster","Neighborhood School", "Chicago Census Block"), col=c("black","gray44","gray64","black"), horiz=FALSE, cex=1)   
 mtext("Lake Michigan             ",side=1,line=-75,adj=1,cex=2.5,col="darkblue")
 mtext("Source: Chicago Public Schools Data Portal 2013-2014. Map excludes elementary charters, magnets that require admissions tests, \n small schools and special education schools.",side=1,line=3,adj=0,cex=2,col="black")
 mtext("           Illinois",side=1,line=-45,adj=0,cex=3,col="black")
