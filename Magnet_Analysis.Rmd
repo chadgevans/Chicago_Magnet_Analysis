@@ -113,22 +113,28 @@ Let's make sure all the spatial joins were done properly.  First, let's plot all
 
 ```{r Chicago_Cook_County_Map, fig.show="hide"}
 plot(USA.shp, ylim=c(41.6, 42), xlim=c(-88.4, -87.35),col = "wheat2",bg="azure2", main="City of Chicago, Situated within Cook County")
+box()
 plot(cook.shp, add=T,col="lightgrey")
 plot(chiblocks.shp, add=T, col="red3")
-legend("bottomleft", inset=.05, c("Cook County","City of Chicago"), fill=c("lightgrey","red3"), horiz=FALSE, bg="white")  
+legend("bottomleft", inset=.05, c("Cook County","City of Chicago"), fill=c("lightgrey","red3"), horiz=FALSE, bg="white") 
+mtext("Illinois",side=1,line=-20,adj=.1,cex=2,col="black")
+mtext("Lake Michigan",side=1,line=-30,adj=.95,cex=1.5,col="black")
 ```
 <img src="graphs/Chicago_Cook_County_Map-1.png" width="500" height="500">
 
 ## Majority African American Blocks {#aamap}
 Let's highlight the areas of Chicago that are majority African American.  The southside and westside of Chicago should have majority black residents. 
+
 ```{r Majority_Black_Census_Tracts_Map, fig.show="hide"}
 plot(USA.shp, ylim=c(41.6, 42), xlim=c(-88.4, -87.35),col = "wheat2",bg="azure2", main="African American Census Blocks in Cook County")
-box()
+#box()
 plot(chiblocks.shp, add=T, col="lightgrey")
 pctblack.shp=chiblocks.shp[!is.na(chiblocks.shp$PCTBLACK),]
 sel <- pctblack.shp$PCTBLACK > 0.50
 plot(pctblack.shp[sel, ], col = "turquoise", add = TRUE) # add selected zones to map
 legend("bottomleft", inset=.05, c("Blocks with Majority \n African Americans"), fill=c("turquoise"), horiz=FALSE, bg="white") 
+mtext("Illinois",side=1,line=-20,adj=.1,cex=2,col="black")
+mtext("Lake Michigan",side=1,line=-30,adj=.95,cex=1.5,col="black")
 ```
 <img src="graphs/Majority_Black_Census_Tracts_Map-1.png" width="500" height="500">
 
@@ -153,6 +159,8 @@ box()
 plot(chiblocks.shp, add=T,col="lightgrey")
 plot(chiblocks.shp[chiblocks.shp$PERCAPCRIME > .2, ], col = "orange", add = TRUE) # add selected zones to map
 legend("bottomleft", inset=.05, c("Blocks with > .2 \n crimes per ACS respondent"), fill=c("orange"), horiz=FALSE, bg="white") 
+mtext("Illinois",side=1,line=-20,adj=.1,cex=2,col="black")
+mtext("Lake Michigan",side=1,line=-30,adj=.95,cex=1.5,col="black")
 ```
 <img src="graphs/High_Crime_Census_Blocks_in_Chicago-1.png" width="500" height="500">
 
@@ -169,7 +177,9 @@ plot(USA.shp, ylim=c(41.64454, 42.02304), xlim=c(-87.94011, -87.52414),col = "wh
 box()
 plot(chiblocks.shp, add=T, col="lightgrey")
 plot(schools.shp, pch = 17, add=T, col="red")
-legend("bottomleft", inset=.05, pch = 17, c("Elementary School"), col="red", horiz=FALSE, bg="white")   
+legend("bottomleft", inset=.05, pch = 17, c("Elementary School"), col="red", horiz=FALSE, bg="white") 
+mtext("Illinois",side=1,line=-20,adj=.1,cex=2,col="black")
+mtext("Lake Michigan",side=1,line=-30,adj=.95,cex=1.5,col="black")
 ```
 <img src="graphs/Elem_Schools_in_Chicago_Map-1.png" width="500" height="500">
 
@@ -184,9 +194,9 @@ plot(magnets.shp, pch = 17, add=T, col="red",cex=1)
 plot(clusters.shp, pch = 17, add=T, col="blue",cex=1)
 plot(openenroll.shp, pch = 17, add=T, col="darkgreen",cex=1)
 legend("bottomleft", inset=.05, pch = c(17,17,17,15), c("Traditional Magnet","Magnet Cluster","Neighborhood School", "Chicago Census Block"), col=c("red","blue","darkgreen","lightgrey"), horiz=FALSE, cex=1)   
-mtext("Lake Michigan             ",side=1,line=-75,adj=1,cex=1.5,col="darkblue")
-mtext("Source: Chicago Public Schools Data Portal 2013-2014. Map excludes elementary charters, magnets that require admissions tests, \n small schools and special education schools.",side=1,line=3,adj=0,cex=2,col="black")
-mtext("           Illinois",side=1,line=-45,adj=0,cex=3,col="black")
+mtext("Illinois",side=1,line=-20,adj=.1,cex=2,col="black")
+mtext("Lake Michigan",side=1,line=-30,adj=.95,cex=1.5,col="black")
+mtext("Source: Chicago Public Schools Data Portal 2013-2014. Map excludes elementary charters, magnets that require admissions tests, small schools and special education schools.",side=1,line=3,adj=0,cex=.6,col="black")
 ```
 <img src="graphs/School_Types_Chicago_Color-1.png" width="500" height="500">
 
@@ -200,10 +210,10 @@ openenroll.shp<-schools.shp[schools.shp$Type2=="Open Enrollment", ]
 plot(magnets.shp, pch = 17, add=T, col="black",cex=1)
 plot(clusters.shp, pch = 17, add=T, col="gray44",cex=1)
 plot(openenroll.shp, pch = 17, add=T, col="grey64",cex=1)
-legend("bottomleft", inset=.05, pch = c(17,17,17,22), c("Traditional Magnet","Magnet Cluster","Neighborhood School", "Chicago Census Block"), col=c("black","gray44","gray64","black"), horiz=FALSE, cex=1)   
-mtext("Lake Michigan             ",side=1,line=-75,adj=1,cex=2.5,col="darkblue")
-mtext("Source: Chicago Public Schools Data Portal 2013-2014. Map excludes elementary charters, magnets that require admissions tests, \n small schools and special education schools.",side=1,line=3,adj=0,cex=2,col="black")
-mtext("           Illinois",side=1,line=-45,adj=0,cex=3,col="black")
+legend("bottomleft", inset=.05, pch = c(17,17,17,22), c("Traditional Magnet","Magnet Cluster","Neighborhood School", "Chicago Census Block"), col=c("black","gray44","gray64","black"), horiz=FALSE, cex=1)  
+mtext("Illinois",side=1,line=-20,adj=.1,cex=2,col="black")
+mtext("Lake Michigan",side=1,line=-30,adj=.95,cex=1.5,col="black")
+mtext("Source: Chicago Public Schools Data Portal 2013-2014. Map excludes elementary charters, magnets that require admissions tests, small schools and special education schools.",side=1,line=1,adj=0,cex=.6,col="black")
 ```
 <img src="graphs/School_Types_Chicago_BW-1.png" width="500" height="500">
 
@@ -251,7 +261,7 @@ theme(axis.text.x=element_text(angle=90, hjust=1))
 Of `r dim(data)[2] ` columns, `r length(miss_pct[miss_pct > 0]) ` have missing values. The percentage of values missing ranges from `r min(miss_pct) `% in `r names(miss_pct[which.min(miss_pct)]) ` to `r max(miss_pct) `% in `r names(miss_pct[which.max(miss_pct)]) `.  Very little missing data.  Listwise deletion will work fine.
 
 ## Descriptive Statistics{#descriptives}
-Correlation Plot
+### Correlations
 ```{r Descriptive Statistics}
 data %>% 
   select(MEDVALUE,CPERCAPCRIME,CMEDROOMS,CMEDROOMS2,CLOGMEDINCOME,CLOGPCT30MIN,CPCTHOMEAGE40,CBk,CBk2,CREAD,CMATH) %>% 
@@ -267,7 +277,7 @@ data %>% mutate(Cluster=data$Type2=="Magnet Cluster", Magnet=data$Type2=="Magnet
 
 High correlation between magnet status and measures of educational quality.  There is virtually no correlation of magnet cluster with reading or math scores.
 
-### Descriptive Statistics
+### Summary Statistics
 
 ```{r}
 Table<-data %>% 
