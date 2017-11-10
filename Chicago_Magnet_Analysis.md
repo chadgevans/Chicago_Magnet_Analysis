@@ -28,8 +28,8 @@ Built with 3.3.2. Last run on 2017-11-10.
     -   Match It
     -   Visual Inspection
     -   Balance
-    -   [Statistical test of treatment](#statistical-test-of-treatment)
-    -   Summary of Propensity Score conclusions
+    -   Statistical test of treatment
+    -   [Summary of Propensity Score conclusions](#summary-of-propensity-score-conclusions)
 -   [Other Exploratory Analysis](#other-exploratory-analysis)
 
 Configure
@@ -468,7 +468,7 @@ source(file.path(Diagnostics_Directory,"diagnostics.R"))
 
     ## [1] "Durbin Watson Test for Autocorrelated Errors"
     ##  lag Autocorrelation D-W Statistic p-value
-    ##    1     -0.05313961      2.098962   0.448
+    ##    1     -0.05313961      2.098962   0.406
     ##  Alternative hypothesis: rho != 0
 
 ### Summary of Diagnostics

@@ -34,8 +34,8 @@ Built with `r getRversion()`.  Last run on `r params$d`.
      + Match It
      + Visual Inspection
      + Balance
-     + [Statistical test of treatment](#statistical-test-of-treatment)
-     + Summary of Propensity Score conclusions
+     + Statistical test of treatment
+     + [Summary of Propensity Score conclusions](#summary-of-propensity-score-conclusions)
 * [Other Exploratory Analysis](#other-exploratory-analysis)
 
 # Configure
