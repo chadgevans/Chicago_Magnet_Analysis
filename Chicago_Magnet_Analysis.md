@@ -21,15 +21,14 @@ Built with 3.3.2. Last run on 2017-11-10.
 -   [Descriptive Statistics](#descriptive-statistics)
 -   [Analysis](#analysis)
 -   [Model Diagnostics](#model-diagnostics)
--   [Sensitivity Analysis](#sensitivity-analysis)
-    -   [Propensity Score Analysis](#propensity-score-analysis)
-        -   Propensity Scores
-        -   Common Support
-        -   Match It
-        -   Visual Inspection
-        -   Balance
-        -   [Statistical test of treatment](#statistical-test-of-treatment)
-    -   [Other Exploratory Analysis](#other-exploratory-analysis)
+-   [Propensity Score Analysis](#propensity-score-analysis)
+    -   Propensity Scores
+    -   Common Support
+    -   Match It
+    -   Visual Inspection
+    -   Balance
+    -   [Statistical test of treatment](#statistical-test-of-treatment)
+-   [Other Exploratory Analysis](#other-exploratory-analysis)
 
 Configure
 =========
@@ -464,15 +463,13 @@ source(file.path(Diagnostics_Directory,"diagnostics.R"))
 
     ## [1] "Test for Autocorrelated Errors"
     ##  lag Autocorrelation D-W Statistic p-value
-    ##    1     -0.05313961      2.098962   0.486
+    ##    1     -0.05313961      2.098962   0.432
     ##  Alternative hypothesis: rho != 0
 
-Sensitivity Analysis
---------------------
+Propensity Score Analysis
+-------------------------
 
-### Propensity Score Analysis
-
-#### Propensity scores
+### Propensity scores
 
 ``` r
 # Define Treatment school
@@ -482,7 +479,7 @@ m_ps <- glm(TREATMENT ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT3
 prs_df<-data.frame(pr_score = predict(m_ps, type = "response"), TREATMENT = m_ps$model$TREATMENT)
 ```
 
-#### Common Support
+### Common Support
 
 ``` r
 labs <- paste("Actual school type attended:", c("Treatment School", "Non-treatment School"))
@@ -497,7 +494,7 @@ prs_df %>%
 
 ![](graphs/unnamed-chunk-6-1.png)
 
-#### Match It
+### Match It
 
 ``` r
 data_cov<-c('CPERCAPCRIME','CMEDROOMS','CMEDROOMS2','CLOGMEDINCOME','CLOGPCT30MIN','CPCTHOMEAGE40','CBk','CBk2','CREAD','CMATH')
@@ -513,7 +510,7 @@ dim(dta_m)
 
     ## [1] 70 14
 
-#### Visual Inspection
+### Visual Inspection
 
 ``` r
 grid.arrange(
@@ -529,15 +526,9 @@ grid.arrange(
 )
 ```
 
-    ## Warning: Removed 36 rows containing missing values (geom_smooth).
+![](graphs/visual_inspection-1.png)
 
-    ## Warning: Removed 3 rows containing missing values (geom_smooth).
-
-    ## Warning: Removed 1 rows containing missing values (geom_smooth).
-
-![](graphs/unnamed-chunk-8-1.png)
-
-#### Balance
+### Balance
 
 ``` r
 dta_m %>%
@@ -554,7 +545,7 @@ dta_m %>%
     ## # ... with 5 more variables: CPCTHOMEAGE40 <dbl>, CBk <dbl>, CBk2 <dbl>,
     ## #   CREAD <dbl>, CMATH <dbl>
 
-#### Statistical Test of Treatment
+### Statistical Test of Treatment
 
 ``` r
 lm_treat <- lm(log(MEDVALUE) ~ TREATMENT, data = dta_m)

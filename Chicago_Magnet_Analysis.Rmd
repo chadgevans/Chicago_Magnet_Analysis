@@ -27,15 +27,14 @@ Built with `r getRversion()`.  Last run on `r params$d`.
 * [Descriptive Statistics](#descriptive-statistics)
 * [Analysis](#analysis)
 * [Model Diagnostics](#model-diagnostics)
-* [Sensitivity Analysis](#sensitivity-analysis)
-     + [Propensity Score Analysis](#propensity-score-analysis)
-          + Propensity Scores
-          + Common Support
-          + Match It
-          + Visual Inspection
-          + Balance
-          + [Statistical test of treatment](#statistical-test-of-treatment)
-     + [Other Exploratory Analysis](#other-exploratory-analysis)
+* [Propensity Score Analysis](#propensity-score-analysis)
+     + Propensity Scores
+     + Common Support
+     + Match It
+     + Visual Inspection
+     + Balance
+     + [Statistical test of treatment](#statistical-test-of-treatment)
+* [Other Exploratory Analysis](#other-exploratory-analysis)
 
 # Configure
 First, set up the environment: read in the libraries, indicate the directories, read in and clean the data.
@@ -362,10 +361,9 @@ write.csv(Table3, file.path(Graph_Directory, "Models_3_4_Table.csv"))
 source(file.path(Diagnostics_Directory,"diagnostics.R"))
 ```
 
-## Sensitivity Analysis
-### Propensity Score Analysis
+## Propensity Score Analysis
 
-#### Propensity scores
+### Propensity scores
 ```{r}
 # Define Treatment school
 data$TREATMENT<-NA
@@ -374,7 +372,7 @@ m_ps <- glm(TREATMENT ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT3
 prs_df<-data.frame(pr_score = predict(m_ps, type = "response"), TREATMENT = m_ps$model$TREATMENT)
 ```
 
-#### Common Support
+### Common Support
 ```{r}
 labs <- paste("Actual school type attended:", c("Treatment School", "Non-treatment School"))
 prs_df %>%
@@ -386,7 +384,7 @@ prs_df %>%
   theme_bw()
 ``` 
 
-#### Match It
+### Match It
 ```{r}
 data_cov<-c('CPERCAPCRIME','CMEDROOMS','CMEDROOMS2','CLOGMEDINCOME','CLOGPCT30MIN','CPCTHOMEAGE40','CBk','CBk2','CREAD','CMATH')
 data_nomiss <- data %>%  # MatchIt does not allow missing values
@@ -399,8 +397,8 @@ dta_m <- match.data(mod_match)
 dim(dta_m)
 ```
 
-#### Visual Inspection
-```{r}
+### Visual Inspection
+```{r visual_inspection, warning=FALSE}
 grid.arrange(
    fn_bal(dta_m, "CPERCAPCRIME"),
    fn_bal(dta_m, "CMEDROOMS") + theme(legend.position = "none"),
@@ -414,7 +412,7 @@ grid.arrange(
 )
 ```
 
-#### Balance
+### Balance
 ```{r}
 dta_m %>%
   group_by(TREATMENT) %>%
@@ -422,7 +420,7 @@ dta_m %>%
   summarise_all(funs(mean))
 ```
 
-#### Statistical Test of Treatment
+### Statistical Test of Treatment
 ```{r}
 lm_treat <- lm(log(MEDVALUE) ~ TREATMENT, data = dta_m)
 summary(lm_treat)
