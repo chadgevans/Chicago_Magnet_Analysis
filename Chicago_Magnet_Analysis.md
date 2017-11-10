@@ -2,7 +2,7 @@ Magnet Analysis
 ================
 Chad Evans
 
-Built with 3.3.2. Last run on 2017-11-09.
+Built with 3.3.2. Last run on 2017-11-10.
 
 -   [Configure](#config)
     -   Libraries
@@ -23,6 +23,13 @@ Built with 3.3.2. Last run on 2017-11-09.
 -   [Model Diagnostics](#model-diagnostics)
 -   [Sensitivity Analysis](#sensitivity-analysis)
     -   [Propensity Score Analysis](#propensity-score-analysis)
+        -   Propensity Scores
+        -   Common Support
+        -   Match It
+        -   Visual Inspection
+        -   Balance
+        -   [Statistical test of treatment](#statistical-test-of-treatment)
+    -   [Other Exploratory Analysis](#other-exploratory-analysis)
 
 Configure
 =========
@@ -457,13 +464,125 @@ source(file.path(Diagnostics_Directory,"diagnostics.R"))
 
     ## [1] "Test for Autocorrelated Errors"
     ##  lag Autocorrelation D-W Statistic p-value
-    ##    1     -0.05313961      2.098962   0.424
+    ##    1     -0.05313961      2.098962    0.43
     ##  Alternative hypothesis: rho != 0
 
 Sensitivity Analysis
 --------------------
 
-### Propensity Score Matching
+### Propensity Score Analysis
+
+#### Propensity scores
+
+``` r
+#data$NEIGHBORHOOD<-0; data$NEIGHBORHOOD[data$Type2=="Open Enrollment"]<-1
+#data$CLUSTER<-0; data$CLUSTER[data$Type2=="Magnet Cluster"]<-1
+data$TRAD_MAGNET<-0; data$TRAD_MAGNET[data$Type2=="Magnet"]<-1
+m_ps <- glm(TRAD_MAGNET ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CMATH, family = binomial(), data = data)
+prs_df<-data.frame(pr_score = predict(m_ps, type = "response"), TRAD_MAGNET = m_ps$model$TRAD_MAGNET)
+```
+
+#### Common Support
+
+``` r
+labs <- paste("Actual school type attended:", c("Traditional Magnet", "Other"))
+prs_df %>%
+  mutate(magnet = ifelse(TRAD_MAGNET == 1, labs[1], labs[2])) %>%
+  ggplot(aes(x = pr_score)) +
+  geom_histogram(color = "white") +
+  facet_wrap(~magnet) +
+  xlab("Probability of going to a Traditional Magnet") +
+  theme_bw()
+```
+
+![](graphs/unnamed-chunk-6-1.png)
+
+#### Match It
+
+``` r
+data_cov<-c('CPERCAPCRIME','CMEDROOMS','CMEDROOMS2','CLOGMEDINCOME','CLOGPCT30MIN','CPCTHOMEAGE40','CBk','CBk2','CREAD','CMATH')
+data_nomiss <- data %>%  # MatchIt does not allow missing values
+  select(MEDVALUE, TRAD_MAGNET, one_of(data_cov)) %>%
+  na.omit()
+
+mod_match <- matchit(TRAD_MAGNET ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CMATH, method = "nearest", data = data_nomiss)
+
+dta_m <- match.data(mod_match)
+dim(dta_m)
+```
+
+    ## [1] 70 14
+
+#### Visual Inspection
+
+``` r
+library(gridExtra)
+grid.arrange(
+   fn_bal(dta_m, "CPERCAPCRIME"),
+   fn_bal(dta_m, "CMEDROOMS") + theme(legend.position = "none"),
+   fn_bal(dta_m, "CLOGMEDINCOME"),
+   fn_bal(dta_m, "CLOGPCT30MIN") + theme(legend.position = "none"),
+   fn_bal(dta_m, "CPCTHOMEAGE40"),
+   fn_bal(dta_m, "CBk") + theme(legend.position = "none"),
+   fn_bal(dta_m, "CREAD"),
+   fn_bal(dta_m, "CMATH") + theme(legend.position = "none"),
+   nrow = 5, widths = c(1, 0.8)
+)
+```
+
+    ## Warning: Removed 36 rows containing missing values (geom_smooth).
+
+    ## Warning: Removed 3 rows containing missing values (geom_smooth).
+
+    ## Warning: Removed 1 rows containing missing values (geom_smooth).
+
+![](graphs/unnamed-chunk-8-1.png)
+
+#### Balance
+
+``` r
+dta_m %>%
+  group_by(TRAD_MAGNET) %>%
+  select(one_of(data_cov)) %>%
+  summarise_all(funs(mean))
+```
+
+    ## # A tibble: 2 x 11
+    ##   TRAD_MAGNET CPERCAPCRIME   CMEDROOMS CMEDROOMS2 CLOGMEDINCOME
+    ##         <dbl>        <dbl>       <dbl>      <dbl>         <dbl>
+    ## 1           0  0.007096608 -0.06822533  1.2996751     0.2355267
+    ## 2           1 -0.012764511 -0.13679676  0.8983378     0.1428872
+    ## # ... with 6 more variables: CLOGPCT30MIN <dbl>, CPCTHOMEAGE40 <dbl>,
+    ## #   CBk <dbl>, CBk2 <dbl>, CREAD <dbl>, CMATH <dbl>
+
+#### Statistical Test of Treatment
+
+``` r
+lm_treat <- lm(log(MEDVALUE) ~ TRAD_MAGNET, data = dta_m)
+summary(lm_treat)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = log(MEDVALUE) ~ TRAD_MAGNET, data = dta_m)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.29996 -0.41643 -0.02247  0.54430  1.34302 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) 12.50908    0.09806 127.561   <2e-16 ***
+    ## TRAD_MAGNET -0.03658    0.13868  -0.264    0.793    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.5802 on 68 degrees of freedom
+    ## Multiple R-squared:  0.001022,   Adjusted R-squared:  -0.01367 
+    ## F-statistic: 0.06959 on 1 and 68 DF,  p-value: 0.7927
+
+Other Exploratory Analysis
+--------------------------
 
 ``` r
 mod=lm(log(MEDVALUE)~Specialty+PERCAPCRIME+CBk+CBk2+log(PCT30MIN)+CMEDROOMS+CMEDROOMS2+PCTHOMEAGE40+log(MEDINCOME), data=data)

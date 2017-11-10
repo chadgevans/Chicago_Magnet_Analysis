@@ -29,7 +29,13 @@ Built with `r getRversion()`.  Last run on `r params$d`.
 * [Model Diagnostics](#model-diagnostics)
 * [Sensitivity Analysis](#sensitivity-analysis)
      + [Propensity Score Analysis](#propensity-score-analysis)
-
+          + Propensity Scores
+          + Common Support
+          + Match It
+          + Visual Inspection
+          + Balance
+          + [Statistical test of treatment](#statistical-test-of-treatment)
+     + [Other Exploratory Analysis](#other-exploratory-analysis)
 
 # Configure
 First, set up the environment: read in the libraries, indicate the directories, read in and clean the data.
@@ -45,6 +51,8 @@ library(corrplot)
 library(knitr)
 library(ggplot2)
 library(car)
+library(MatchIt)
+source("/Users/chadgevans/Research/Projects/Chicago_Magnet_Analysis/lib/fn_bal.R")
 ```
 
 ```{r Directories, include=FALSE}
@@ -353,9 +361,74 @@ write.csv(Table3, file.path(Graph_Directory, "Models_3_4_Table.csv"))
 source(file.path(Diagnostics_Directory,"diagnostics.R"))
 ```
 
-
 ## Sensitivity Analysis
-### Propensity Score Matching
+### Propensity Score Analysis
+
+#### Propensity scores
+```{r}
+#data$NEIGHBORHOOD<-0; data$NEIGHBORHOOD[data$Type2=="Open Enrollment"]<-1
+#data$CLUSTER<-0; data$CLUSTER[data$Type2=="Magnet Cluster"]<-1
+data$TRAD_MAGNET<-0; data$TRAD_MAGNET[data$Type2=="Magnet"]<-1
+m_ps <- glm(TRAD_MAGNET ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CMATH, family = binomial(), data = data)
+prs_df<-data.frame(pr_score = predict(m_ps, type = "response"), TRAD_MAGNET = m_ps$model$TRAD_MAGNET)
+```
+
+#### Common Support
+```{r}
+labs <- paste("Actual school type attended:", c("Traditional Magnet", "Other"))
+prs_df %>%
+  mutate(magnet = ifelse(TRAD_MAGNET == 1, labs[1], labs[2])) %>%
+  ggplot(aes(x = pr_score)) +
+  geom_histogram(color = "white") +
+  facet_wrap(~magnet) +
+  xlab("Probability of going to a Traditional Magnet") +
+  theme_bw()
+``` 
+
+#### Match It
+```{r}
+data_cov<-c('CPERCAPCRIME','CMEDROOMS','CMEDROOMS2','CLOGMEDINCOME','CLOGPCT30MIN','CPCTHOMEAGE40','CBk','CBk2','CREAD','CMATH')
+data_nomiss <- data %>%  # MatchIt does not allow missing values
+  select(MEDVALUE, TRAD_MAGNET, one_of(data_cov)) %>%
+  na.omit()
+
+mod_match <- matchit(TRAD_MAGNET ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CMATH, method = "nearest", data = data_nomiss)
+
+dta_m <- match.data(mod_match)
+dim(dta_m)
+```
+
+#### Visual Inspection
+```{r}
+library(gridExtra)
+grid.arrange(
+   fn_bal(dta_m, "CPERCAPCRIME"),
+   fn_bal(dta_m, "CMEDROOMS") + theme(legend.position = "none"),
+   fn_bal(dta_m, "CLOGMEDINCOME"),
+   fn_bal(dta_m, "CLOGPCT30MIN") + theme(legend.position = "none"),
+   fn_bal(dta_m, "CPCTHOMEAGE40"),
+   fn_bal(dta_m, "CBk") + theme(legend.position = "none"),
+   fn_bal(dta_m, "CREAD"),
+   fn_bal(dta_m, "CMATH") + theme(legend.position = "none"),
+   nrow = 5, widths = c(1, 0.8)
+)
+```
+
+#### Balance
+```{r}
+dta_m %>%
+  group_by(TRAD_MAGNET) %>%
+  select(one_of(data_cov)) %>%
+  summarise_all(funs(mean))
+```
+
+#### Statistical Test of Treatment
+```{r}
+lm_treat <- lm(log(MEDVALUE) ~ TRAD_MAGNET, data = dta_m)
+summary(lm_treat)
+```
+
+## Other Exploratory Analysis
 
 ```{r Exploratory, eval=FALSE}
 mod=lm(log(MEDVALUE)~Specialty+PERCAPCRIME+CBk+CBk2+log(PCT30MIN)+CMEDROOMS+CMEDROOMS2+PCTHOMEAGE40+log(MEDINCOME), data=data)
