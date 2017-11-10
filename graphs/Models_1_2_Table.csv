@@ -1,0 +1,11 @@
+"","Mod1_Coef","Mod1_SE","Mod1_tstat","Mod1_pvalue","Mod2_Coef","Mod2_SE","Mod2_tstat","Mod2_pvalue"
+"Intercept",12.153,0.03,411.283,0,12.093,0.055,218.646,0
+"Magnet (ref=Neighborhood Schools)",0.213,0.054,3.935,0,0.102,0.043,2.386,0.018
+"Crime Rate",NA,NA,NA,NA,-0.477,0.202,-2.358,0.019
+"Median Number of Rooms",NA,NA,NA,NA,-0.125,0.027,-4.584,0
+"Median Number of Rooms^2",NA,NA,NA,NA,0.043,0.015,2.863,0.004
+"log(Median Income)",NA,NA,NA,NA,0.374,0.052,7.165,0
+"log(Proportion Commuting > 30 min)",NA,NA,NA,NA,-0.386,0.075,-5.141,0
+"Proportion of Homes Build before 1940",NA,NA,NA,NA,0.133,0.087,1.531,0.127
+"Proportion Black",NA,NA,NA,NA,-0.2,0.07,-2.842,0.005
+"Proportion Black^2",NA,NA,NA,NA,0.275,0.264,1.038,0.3
