@@ -53,6 +53,7 @@ library(ggplot2)
 library(car)
 library(MatchIt)
 source("/Users/chadgevans/Research/Projects/Chicago_Magnet_Analysis/lib/fn_bal.R")
+library(gridExtra)
 ```
 
 ```{r Directories, include=FALSE}
@@ -366,22 +367,22 @@ source(file.path(Diagnostics_Directory,"diagnostics.R"))
 
 #### Propensity scores
 ```{r}
-#data$NEIGHBORHOOD<-0; data$NEIGHBORHOOD[data$Type2=="Open Enrollment"]<-1
-#data$CLUSTER<-0; data$CLUSTER[data$Type2=="Magnet Cluster"]<-1
-data$TRAD_MAGNET<-0; data$TRAD_MAGNET[data$Type2=="Magnet"]<-1
-m_ps <- glm(TRAD_MAGNET ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CMATH, family = binomial(), data = data)
-prs_df<-data.frame(pr_score = predict(m_ps, type = "response"), TRAD_MAGNET = m_ps$model$TRAD_MAGNET)
+# Define Treatment school
+data$TREATMENT<-NA
+data$TREATMENT<-ifelse(data$Type2=="Magnet",1,0) # "Open Enrollment" and "Magnet Cluster" reference
+m_ps <- glm(TREATMENT ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CMATH, family = binomial(), data = data)
+prs_df<-data.frame(pr_score = predict(m_ps, type = "response"), TREATMENT = m_ps$model$TREATMENT)
 ```
 
 #### Common Support
 ```{r}
-labs <- paste("Actual school type attended:", c("Traditional Magnet", "Other"))
+labs <- paste("Actual school type attended:", c("Treatment School", "Non-treatment School"))
 prs_df %>%
-  mutate(magnet = ifelse(TRAD_MAGNET == 1, labs[1], labs[2])) %>%
+  mutate(TREATMENT = ifelse(TREATMENT == 1, labs[1], labs[2])) %>%
   ggplot(aes(x = pr_score)) +
   geom_histogram(color = "white") +
-  facet_wrap(~magnet) +
-  xlab("Probability of going to a Traditional Magnet") +
+  facet_wrap(~TREATMENT) +
+  xlab("Probability of going to the treatment school type") +
   theme_bw()
 ``` 
 
@@ -389,10 +390,10 @@ prs_df %>%
 ```{r}
 data_cov<-c('CPERCAPCRIME','CMEDROOMS','CMEDROOMS2','CLOGMEDINCOME','CLOGPCT30MIN','CPCTHOMEAGE40','CBk','CBk2','CREAD','CMATH')
 data_nomiss <- data %>%  # MatchIt does not allow missing values
-  select(MEDVALUE, TRAD_MAGNET, one_of(data_cov)) %>%
+  select(MEDVALUE, TREATMENT, one_of(data_cov)) %>%
   na.omit()
 
-mod_match <- matchit(TRAD_MAGNET ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CMATH, method = "nearest", data = data_nomiss)
+mod_match <- matchit(TREATMENT ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CMATH, method = "nearest", data = data_nomiss)
 
 dta_m <- match.data(mod_match)
 dim(dta_m)
@@ -400,7 +401,6 @@ dim(dta_m)
 
 #### Visual Inspection
 ```{r}
-library(gridExtra)
 grid.arrange(
    fn_bal(dta_m, "CPERCAPCRIME"),
    fn_bal(dta_m, "CMEDROOMS") + theme(legend.position = "none"),
@@ -417,14 +417,14 @@ grid.arrange(
 #### Balance
 ```{r}
 dta_m %>%
-  group_by(TRAD_MAGNET) %>%
+  group_by(TREATMENT) %>%
   select(one_of(data_cov)) %>%
   summarise_all(funs(mean))
 ```
 
 #### Statistical Test of Treatment
 ```{r}
-lm_treat <- lm(log(MEDVALUE) ~ TRAD_MAGNET, data = dta_m)
+lm_treat <- lm(log(MEDVALUE) ~ TREATMENT, data = dta_m)
 summary(lm_treat)
 ```
 
