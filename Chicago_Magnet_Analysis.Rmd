@@ -34,7 +34,7 @@ Built with `r getRversion()`.  Last run on `r params$d`.
 # Configure
 First, set up the environment: read in the libraries, indicate the directories, read in and clean the data.
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, fig.width=5, fig.height=5, fig.path='graphs/')
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, fig.width=10, fig.height=10, fig.path='graphs/')
 ```
 
 ```{r Libraries, include=FALSE}
