@@ -1,10 +1,10 @@
-Magnet Analysis
+Chicago Magnet Analysis
 ================
 Chad Evans
 
 Built with 3.3.2. Last run on 2017-11-10.
 
--   [Configure](#config)
+-   [Configure](#configure)
     -   Libraries
     -   directories
     -   data
@@ -19,8 +19,9 @@ Built with 3.3.2. Last run on 2017-11-10.
     -   School Typology Map Grayscale
     -   Chicago blocks on Lake Michigan
 -   [Descriptive Statistics](#descriptive-statistics)
--   [Analysis](#analysis)
--   [Model Diagnostics](#model-diagnostics)
+-   [Regression Analysis](#regression-analysis)
+-   [Regression Diagnostics](#regression-diagnostics)
+    -   [Summary of Diagnostics](#summary-of-diagnostics)
 -   [Propensity Score Analysis](#propensity-score-analysis)
     -   Propensity Scores
     -   Common Support
@@ -28,6 +29,7 @@ Built with 3.3.2. Last run on 2017-11-10.
     -   Visual Inspection
     -   Balance
     -   [Statistical test of treatment](#statistical-test-of-treatment)
+    -   Summary of Propensity Score conclusions
 -   [Other Exploratory Analysis](#other-exploratory-analysis)
 
 Configure
@@ -297,10 +299,9 @@ theme(axis.text.x=element_text(angle=90, hjust=1))
 ![](graphs/Missing%20data-1.png) Of 48 columns, 20 have missing values. The percentage of values missing ranges from 0.5% in PCTBLACK to 4.1% in MEDVALUE. Very little missing data. Listwise deletion will work fine.
 
 Descriptive Statistics
-======================
+----------------------
 
-Correlations
-------------
+### Correlations
 
 ``` r
 data %>% 
@@ -325,8 +326,7 @@ data %>% mutate(Cluster=data$Type2=="Magnet Cluster", Magnet=data$Type2=="Magnet
 
 High correlation between magnet status and measures of educational quality. There is virtually no correlation of magnet cluster with reading or math scores.
 
-Descriptive Statistics Table
-----------------------------
+### Descriptive Statistics Table
 
 ``` r
 data$Type2<-droplevels(data$Type2)
@@ -357,8 +357,8 @@ kable(Table)
 | Proportion Exceeding ISAT Reading           |            12.81|           14.88|      27.29|
 | Proportion Exceeding ISAT Math              |            17.11|           19.51|      32.77|
 
-Analysis
---------
+Regression Analysis
+-------------------
 
 ### Regression of Logged Median Neighborhood Home Value on Magnet, Covariates
 
@@ -425,25 +425,30 @@ kable(Table3)
 write.csv(Table3, file.path(Graph_Directory, "Models_3_4_Table.csv"))
 ```
 
-Model Diagnostics
------------------
+Regression Diagnostics
+----------------------
 
 ``` r
 source(file.path(Diagnostics_Directory,"diagnostics.R"))
 ```
 
     ## [1] "Outlier and Influential Observations Diagnostics"
+    ##    rstudent unadjusted p-value Bonferonni p
+    ## 23 4.159256         4.0108e-05      0.01476
 
-![](graphs/diagnostics-1.png)![](graphs/diagnostics-2.png)![](graphs/diagnostics-3.png)![](graphs/diagnostics-4.png)![](graphs/diagnostics-5.png)![](graphs/diagnostics-6.png)
+![](graphs/diagnostics-1.png)![](graphs/diagnostics-2.png)![](graphs/diagnostics-3.png)![](graphs/diagnostics-4.png)
 
-    ## [1] "Non-normality Diagnostics"
+    ## [1] "Non-normality (of residuals) Diagnostics"
+
+![](graphs/diagnostics-5.png)![](graphs/diagnostics-6.png)
+
+    ## [1] "Homoskedasticity Diagnostics"
 
 ![](graphs/diagnostics-7.png)
 
-    ## [1] "Homoscedasticity Diagnostics"
-
-![](graphs/diagnostics-8.png)
-
+    ## Non-constant Variance Score Test 
+    ## Variance formula: ~ fitted.values 
+    ## Chisquare = 0.04112065    Df = 1     p = 0.8393052 
     ## [1] "Multicollinearity Diagnostics"
     ##                   GVIF Df GVIF^(1/(2*Df))
     ## Type2         1.264852  2        1.060498
@@ -459,12 +464,26 @@ source(file.path(Diagnostics_Directory,"diagnostics.R"))
     ## CMATH         8.227938  1        2.868438
     ## [1] "Nonlinearity Diagnostics"
 
-![](graphs/diagnostics-9.png)![](graphs/diagnostics-10.png)
+![](graphs/diagnostics-8.png)![](graphs/diagnostics-9.png)
 
-    ## [1] "Test for Autocorrelated Errors"
+    ## [1] "Durbin Watson Test for Autocorrelated Errors"
     ##  lag Autocorrelation D-W Statistic p-value
-    ##    1     -0.05313961      2.098962   0.432
+    ##    1     -0.05313961      2.098962   0.448
     ##  Alternative hypothesis: rho != 0
+
+### Summary of Diagnostics
+
+-   Outlier and Influential Observations
+    -   There is one outlier (case 23). It seems to be peeling away from what would be expected if studentized residuals were truely standard normal. The outlier test and cook's distance also identified case 23. I ran the model with out case 23 and the results did not change. I'm not concerned about it an will leave it in the final analysis.
+    -   The partial regression plots also do not present visual evidence of an overly influential observations.
+-   Normality of Residuals
+    -   The studentized residuals look normally distributed around zero
+-   Homoskedasticity
+    -   The plot of absolute studentized residuals x fitted values looks horizontal (homoskedasticity). The non-constant variance score test is insignificant. Errors appear homoskedasticistic.
+-   Multicollinearity
+    -   The only substantially collinear variables are reading scores and math scores. However, we are not interpreting those coefficients. We only want to control for them, so variance inflation is not concerning. Both variables can stay in the model and control for a more general student "quality."
+-   Dependency of errors
+    -   The Durbin Watson test fails to reject the hypothesis that errors are uncorrelated. Thus, there is no evidence of dependency in the errors.
 
 Propensity Score Analysis
 -------------------------
@@ -531,19 +550,34 @@ grid.arrange(
 ### Balance
 
 ``` r
-dta_m %>%
-  group_by(TREATMENT) %>%
-  select(one_of(data_cov)) %>%
-  summarise_all(funs(mean))
+summary(mod_match)[4]
 ```
 
-    ## # A tibble: 2 x 11
-    ##   TREATMENT CPERCAPCRIME   CMEDROOMS CMEDROOMS2 CLOGMEDINCOME CLOGPCT30MIN
-    ##       <dbl>        <dbl>       <dbl>      <dbl>         <dbl>        <dbl>
-    ## 1         0  0.007096608 -0.06822533  1.2996751     0.2355267   -0.1618604
-    ## 2         1 -0.012764511 -0.13679676  0.8983378     0.1428872   -0.1179443
-    ## # ... with 5 more variables: CPCTHOMEAGE40 <dbl>, CBk <dbl>, CBk2 <dbl>,
-    ## #   CREAD <dbl>, CMATH <dbl>
+    ## $sum.matched
+    ##               Means Treated Means Control SD Control    Mean Diff
+    ## distance         0.26338461   0.237999517  0.2046840  0.025385089
+    ## CPERCAPCRIME    -0.01276451   0.007096608  0.1941310 -0.019861118
+    ## CMEDROOMS       -0.13679676  -0.068225331  1.1546035 -0.068571429
+    ## CMEDROOMS2       0.89833784   1.299675104  2.5373225 -0.401337261
+    ## CLOGMEDINCOME    0.14288716   0.235526707  0.6841823 -0.092639548
+    ## CLOGPCT30MIN    -0.11794428  -0.161860436  0.3352990  0.043916157
+    ## CPCTHOMEAGE40   -0.02806775  -0.094598349  0.2675373  0.066530596
+    ## CBk             -0.09386039  -0.100853442  0.4177088  0.006993054
+    ## CBk2             0.17806446   0.179666869  0.0840052 -0.001602411
+    ## CREAD           12.82184524  11.733273810 18.1697241  1.088571429
+    ## CMATH           13.94398065  12.992552083 19.9664896  0.951428571
+    ##                   eQQ Med   eQQ Mean    eQQ Max
+    ## distance      0.005790299 0.02829597 0.12579708
+    ## CPERCAPCRIME  0.005942738 0.03140577 0.59596529
+    ## CMEDROOMS     0.200000000 0.23428571 0.80000000
+    ## CMEDROOMS2    0.158814433 0.51543741 5.29773196
+    ## CLOGMEDINCOME 0.108751152 0.12521311 0.33923248
+    ## CLOGPCT30MIN  0.048932868 0.06613710 0.22933001
+    ## CPCTHOMEAGE40 0.061148519 0.07172714 0.21343421
+    ## CBk           0.011210644 0.02135871 0.14331610
+    ## CBk2          0.007623101 0.01056025 0.05047633
+    ## CREAD         2.900000000 3.00857143 7.40000000
+    ## CMATH         3.000000000 2.92857143 7.00000000
 
 ### Statistical Test of Treatment
 
@@ -570,6 +604,19 @@ summary(lm_treat)
     ## Residual standard error: 0.5802 on 68 degrees of freedom
     ## Multiple R-squared:  0.001022,   Adjusted R-squared:  -0.01367 
     ## F-statistic: 0.06959 on 1 and 68 DF,  p-value: 0.7927
+
+### Summary of Propensity Score conclusions
+
+-   Common Support
+    -   Clearly more students going to non-treatment schools. But the support is actually pretty good. Most students have a low probability of going to a treatment school
+-   Match It
+    -   Non-treatment matches were found for 35 out of 38 treatment schools. Thus the test will be based on 70 total schools.
+-   Visual Inspection
+    -   The balance looks ok at various propensity levels. Perhaps the two variables of greatest concern are "home age" and "concentration African American." In those cases there are slighly wider gaps in the propensity scores
+-   Balance
+    -   The mean differentials look similar. The biggest difference is in the reading and math scores. Treatment schools did score higher in reading that non-treatment schools. This is somewhat concerning.
+-   Statistical Test of Treatment
+    -   The treatment was found to be insignificant. This is the same result as the regression model. After controlling for background characteristics, the correlation between magnets and log home values disappears. The propensity score reinforces/validated the findings from the regression model.
 
 Other Exploratory Analysis
 --------------------------

@@ -1,5 +1,5 @@
 ---
-title: "Magnet Analysis"
+title: "Chicago Magnet Analysis"
 author: Chad Evans
 output: 
   github_document:
@@ -10,7 +10,7 @@ params:
 ---
 Built with `r getRversion()`.  Last run on `r params$d`.
 
-* [Configure](#config)
+* [Configure](#configure)
     + Libraries
     + directories
     + data
@@ -25,8 +25,9 @@ Built with `r getRversion()`.  Last run on `r params$d`.
      + School Typology Map Grayscale
      + Chicago blocks on Lake Michigan
 * [Descriptive Statistics](#descriptive-statistics)
-* [Analysis](#analysis)
-* [Model Diagnostics](#model-diagnostics)
+* [Regression Analysis](#regression-analysis)
+* [Regression Diagnostics](#regression-diagnostics)
+     + [Summary of Diagnostics](#summary-of-diagnostics)
 * [Propensity Score Analysis](#propensity-score-analysis)
      + Propensity Scores
      + Common Support
@@ -34,6 +35,7 @@ Built with `r getRversion()`.  Last run on `r params$d`.
      + Visual Inspection
      + Balance
      + [Statistical test of treatment](#statistical-test-of-treatment)
+     + Summary of Propensity Score conclusions
 * [Other Exploratory Analysis](#other-exploratory-analysis)
 
 # Configure
@@ -289,8 +291,8 @@ theme(axis.text.x=element_text(angle=90, hjust=1))
 ```
 Of `r dim(data)[2] ` columns, `r length(miss_pct[miss_pct > 0]) ` have missing values. The percentage of values missing ranges from `r min(miss_pct) `% in `r names(miss_pct[which.min(miss_pct)]) ` to `r max(miss_pct) `% in `r names(miss_pct[which.max(miss_pct)]) `.  Very little missing data.  Listwise deletion will work fine.
 
-# Descriptive Statistics
-## Correlations
+## Descriptive Statistics
+### Correlations
 ```{r Descriptive Statistics}
 data %>% 
   select(MEDVALUE,CPERCAPCRIME,CMEDROOMS,CMEDROOMS2,CLOGMEDINCOME,CLOGPCT30MIN,CPCTHOMEAGE40,CBk,CBk2,CREAD,CMATH) %>% 
@@ -306,7 +308,7 @@ data %>% mutate(Cluster=data$Type2=="Magnet Cluster", Magnet=data$Type2=="Magnet
 
 High correlation between magnet status and measures of educational quality.  There is virtually no correlation of magnet cluster with reading or math scores.
 
-## Descriptive Statistics Table
+### Descriptive Statistics Table
 ```{r}
 data$Type2<-droplevels(data$Type2)
 data$Type2<-factor(data$Type2, levels = c("Open Enrollment","Magnet Cluster","Magnet"))
@@ -323,7 +325,7 @@ row.names(Table)<-c("n","Average Median Home Value","Crime Rate","Median # of Ro
 kable(Table)
 ```
 
-## Analysis
+## Regression Analysis
 ### Regression of Logged Median Neighborhood Home Value on Magnet, Covariates
 ```{r table_two}
 mod0<-lm(log(MEDVALUE)~Magnet, data=data)
@@ -356,10 +358,23 @@ kable(Table3)
 write.csv(Table3, file.path(Graph_Directory, "Models_3_4_Table.csv"))
 ```
 
-## Model Diagnostics
+## Regression Diagnostics
 ```{r diagnostics}
 source(file.path(Diagnostics_Directory,"diagnostics.R"))
 ```
+
+### Summary of Diagnostics
+* Outlier and Influential Observations
+     + There is one outlier (case 23). It seems to be peeling away from what would be expected if studentized residuals were truely standard normal.  The outlier test and cook's distance also identified case 23.  I ran the model with out case 23 and the results did not change.  I'm not concerned about it an will leave it in the final analysis.
+     + The partial regression plots also do not present visual evidence of an overly influential observations.
+* Normality of Residuals
+     + The studentized residuals look normally distributed around zero
+* Homoskedasticity
+     + The plot of absolute studentized residuals x fitted values looks horizontal (homoskedasticity).  The non-constant variance score test is insignificant.  Errors appear homoskedasticistic.
+* Multicollinearity
+     + The only substantially collinear variables are reading scores and math scores.  However, we are not interpreting those coefficients.  We only want to control for them, so variance inflation is not concerning.  Both variables can stay in the model and control for a more general student "quality."
+* Dependency of errors
+     + The Durbin Watson test fails to reject the hypothesis that errors are uncorrelated.  Thus, there is no evidence of dependency in the errors.
 
 ## Propensity Score Analysis
 
@@ -414,10 +429,7 @@ grid.arrange(
 
 ### Balance
 ```{r}
-dta_m %>%
-  group_by(TREATMENT) %>%
-  select(one_of(data_cov)) %>%
-  summarise_all(funs(mean))
+summary(mod_match)[4]
 ```
 
 ### Statistical Test of Treatment
@@ -425,6 +437,19 @@ dta_m %>%
 lm_treat <- lm(log(MEDVALUE) ~ TREATMENT, data = dta_m)
 summary(lm_treat)
 ```
+
+### Summary of Propensity Score conclusions
+
+* Common Support
+     + Clearly more students going to non-treatment schools.  But the support is actually pretty good.  Most students have a low probability of going to a treatment school
+* Match It
+     + Non-treatment matches were found for 35 out of 38 treatment schools.  Thus the test will be based on 70 total schools.  
+* Visual Inspection
+     + The balance looks ok at various propensity levels.  Perhaps the two variables of greatest concern are "home age" and "concentration African American."  In those cases there are slighly wider gaps in the propensity scores
+* Balance
+     + The mean differentials look similar.  The biggest difference is in the reading and math scores.  Treatment schools did score higher in reading that non-treatment schools.  This is somewhat concerning.
+* Statistical Test of Treatment
+     + The treatment was found to be insignificant.  This is the same result as the regression model.  After controlling for background characteristics, the correlation between magnets and log home values disappears.  The propensity score reinforces/validated the findings from the regression model.
 
 ## Other Exploratory Analysis
 
