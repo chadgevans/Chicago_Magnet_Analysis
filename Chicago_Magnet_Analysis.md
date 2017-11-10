@@ -464,7 +464,7 @@ source(file.path(Diagnostics_Directory,"diagnostics.R"))
 
     ## [1] "Test for Autocorrelated Errors"
     ##  lag Autocorrelation D-W Statistic p-value
-    ##    1     -0.05313961      2.098962    0.47
+    ##    1     -0.05313961      2.098962   0.486
     ##  Alternative hypothesis: rho != 0
 
 Sensitivity Analysis
