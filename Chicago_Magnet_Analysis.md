@@ -464,7 +464,7 @@ source(file.path(Diagnostics_Directory,"diagnostics.R"))
 
     ## [1] "Test for Autocorrelated Errors"
     ##  lag Autocorrelation D-W Statistic p-value
-    ##    1     -0.05313961      2.098962    0.43
+    ##    1     -0.05313961      2.098962    0.47
     ##  Alternative hypothesis: rho != 0
 
 Sensitivity Analysis
@@ -475,23 +475,23 @@ Sensitivity Analysis
 #### Propensity scores
 
 ``` r
-#data$NEIGHBORHOOD<-0; data$NEIGHBORHOOD[data$Type2=="Open Enrollment"]<-1
-#data$CLUSTER<-0; data$CLUSTER[data$Type2=="Magnet Cluster"]<-1
-data$TRAD_MAGNET<-0; data$TRAD_MAGNET[data$Type2=="Magnet"]<-1
-m_ps <- glm(TRAD_MAGNET ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CMATH, family = binomial(), data = data)
-prs_df<-data.frame(pr_score = predict(m_ps, type = "response"), TRAD_MAGNET = m_ps$model$TRAD_MAGNET)
+# Define Treatment school
+data$TREATMENT<-NA
+data$TREATMENT<-ifelse(data$Type2=="Magnet",1,0) # "Open Enrollment" and "Magnet Cluster" reference
+m_ps <- glm(TREATMENT ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CMATH, family = binomial(), data = data)
+prs_df<-data.frame(pr_score = predict(m_ps, type = "response"), TREATMENT = m_ps$model$TREATMENT)
 ```
 
 #### Common Support
 
 ``` r
-labs <- paste("Actual school type attended:", c("Traditional Magnet", "Other"))
+labs <- paste("Actual school type attended:", c("Treatment School", "Non-treatment School"))
 prs_df %>%
-  mutate(magnet = ifelse(TRAD_MAGNET == 1, labs[1], labs[2])) %>%
+  mutate(TREATMENT = ifelse(TREATMENT == 1, labs[1], labs[2])) %>%
   ggplot(aes(x = pr_score)) +
   geom_histogram(color = "white") +
-  facet_wrap(~magnet) +
-  xlab("Probability of going to a Traditional Magnet") +
+  facet_wrap(~TREATMENT) +
+  xlab("Probability of going to the treatment school type") +
   theme_bw()
 ```
 
@@ -502,10 +502,10 @@ prs_df %>%
 ``` r
 data_cov<-c('CPERCAPCRIME','CMEDROOMS','CMEDROOMS2','CLOGMEDINCOME','CLOGPCT30MIN','CPCTHOMEAGE40','CBk','CBk2','CREAD','CMATH')
 data_nomiss <- data %>%  # MatchIt does not allow missing values
-  select(MEDVALUE, TRAD_MAGNET, one_of(data_cov)) %>%
+  select(MEDVALUE, TREATMENT, one_of(data_cov)) %>%
   na.omit()
 
-mod_match <- matchit(TRAD_MAGNET ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CMATH, method = "nearest", data = data_nomiss)
+mod_match <- matchit(TREATMENT ~ CPERCAPCRIME+CMEDROOMS+CMEDROOMS2+CLOGMEDINCOME+CLOGPCT30MIN+CPCTHOMEAGE40+CBk+CBk2+CREAD+CMATH, method = "nearest", data = data_nomiss)
 
 dta_m <- match.data(mod_match)
 dim(dta_m)
@@ -516,7 +516,6 @@ dim(dta_m)
 #### Visual Inspection
 
 ``` r
-library(gridExtra)
 grid.arrange(
    fn_bal(dta_m, "CPERCAPCRIME"),
    fn_bal(dta_m, "CMEDROOMS") + theme(legend.position = "none"),
@@ -542,29 +541,29 @@ grid.arrange(
 
 ``` r
 dta_m %>%
-  group_by(TRAD_MAGNET) %>%
+  group_by(TREATMENT) %>%
   select(one_of(data_cov)) %>%
   summarise_all(funs(mean))
 ```
 
     ## # A tibble: 2 x 11
-    ##   TRAD_MAGNET CPERCAPCRIME   CMEDROOMS CMEDROOMS2 CLOGMEDINCOME
-    ##         <dbl>        <dbl>       <dbl>      <dbl>         <dbl>
-    ## 1           0  0.007096608 -0.06822533  1.2996751     0.2355267
-    ## 2           1 -0.012764511 -0.13679676  0.8983378     0.1428872
-    ## # ... with 6 more variables: CLOGPCT30MIN <dbl>, CPCTHOMEAGE40 <dbl>,
-    ## #   CBk <dbl>, CBk2 <dbl>, CREAD <dbl>, CMATH <dbl>
+    ##   TREATMENT CPERCAPCRIME   CMEDROOMS CMEDROOMS2 CLOGMEDINCOME CLOGPCT30MIN
+    ##       <dbl>        <dbl>       <dbl>      <dbl>         <dbl>        <dbl>
+    ## 1         0  0.007096608 -0.06822533  1.2996751     0.2355267   -0.1618604
+    ## 2         1 -0.012764511 -0.13679676  0.8983378     0.1428872   -0.1179443
+    ## # ... with 5 more variables: CPCTHOMEAGE40 <dbl>, CBk <dbl>, CBk2 <dbl>,
+    ## #   CREAD <dbl>, CMATH <dbl>
 
 #### Statistical Test of Treatment
 
 ``` r
-lm_treat <- lm(log(MEDVALUE) ~ TRAD_MAGNET, data = dta_m)
+lm_treat <- lm(log(MEDVALUE) ~ TREATMENT, data = dta_m)
 summary(lm_treat)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = log(MEDVALUE) ~ TRAD_MAGNET, data = dta_m)
+    ## lm(formula = log(MEDVALUE) ~ TREATMENT, data = dta_m)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
@@ -573,7 +572,7 @@ summary(lm_treat)
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
     ## (Intercept) 12.50908    0.09806 127.561   <2e-16 ***
-    ## TRAD_MAGNET -0.03658    0.13868  -0.264    0.793    
+    ## TREATMENT   -0.03658    0.13868  -0.264    0.793    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
